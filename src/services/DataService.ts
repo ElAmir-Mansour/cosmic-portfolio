@@ -47,6 +47,12 @@ let cachedData: ContentData | null = null;
 
 async function fetchContent(): Promise<ContentData> {
   if (cachedData) return cachedData;
+  // Check localStorage for saved admin changes first
+  const saved = localStorage.getItem("portfolio-content");
+  if (saved) {
+    cachedData = JSON.parse(saved);
+    return cachedData!;
+  }
   const res = await fetch(`${BASE_URL}/content.json`);
   if (!res.ok) throw new Error("Failed to load content");
   cachedData = await res.json();
