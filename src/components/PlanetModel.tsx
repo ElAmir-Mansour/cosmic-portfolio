@@ -8,7 +8,7 @@ interface PlanetModelProps {
   size: number;
   orbitRadius: number;
   orbitSpeed: number;
-  onClick?: (position: THREE.Vector3) => void;
+  onClick?: (groupRef: React.RefObject<THREE.Group>) => void;
   name: string;
   modelPath?: string;
   glowIntensity?: number;
@@ -79,7 +79,7 @@ const PlanetModel = ({ color, size, orbitRadius, orbitSpeed, onClick, name, mode
 
   const handleClick = (e: any) => {
     e.stopPropagation();
-    if (groupRef.current) onClick?.(groupRef.current.position.clone());
+    if (groupRef.current) onClick?.(groupRef as React.RefObject<THREE.Group>);
   };
 
   return (
