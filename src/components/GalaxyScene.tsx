@@ -19,10 +19,10 @@ const Sun = () => (
     <meshStandardMaterial
       color="#fbbf24"
       emissive="#fbbf24"
-      emissiveIntensity={3}
+      emissiveIntensity={2}
       toneMapped={false}
     />
-    <pointLight color="#fbbf24" intensity={3} distance={60} />
+    <pointLight color="#fbbf24" intensity={2} distance={50} />
   </mesh>
 );
 
