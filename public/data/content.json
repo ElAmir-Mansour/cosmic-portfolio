@@ -1,0 +1,147 @@
+{
+  "profile": {
+    "name": "Your Name",
+    "title": "Full-Stack Engineer & Creative Technologist",
+    "tagline": "Building at the intersection of code, design, and intelligence.",
+    "email": "hello@example.com",
+    "github": "https://github.com",
+    "linkedin": "https://linkedin.com"
+  },
+  "planets": [
+    {
+      "id": "ios",
+      "name": "iOS Development",
+      "color": "#3B82F6",
+      "neonClass": "neon-blue",
+      "orbitRadius": 4,
+      "orbitSpeed": 0.3,
+      "size": 0.5,
+      "description": "Native iOS applications built with Swift and SwiftUI. Clean architecture, smooth animations, and pixel-perfect interfaces.",
+      "skills": ["Swift", "SwiftUI", "UIKit", "CoreData", "Combine"],
+      "projects": [
+        {
+          "id": "ios-1",
+          "title": "Fitness Tracker Pro",
+          "description": "A health and fitness app with real-time workout tracking, custom routines, and HealthKit integration.",
+          "tags": ["Swift", "SwiftUI", "HealthKit"],
+          "link": "#"
+        },
+        {
+          "id": "ios-2",
+          "title": "Smart Notes",
+          "description": "An AI-powered note-taking app with natural language search and automatic categorization.",
+          "tags": ["Swift", "CoreML", "CloudKit"],
+          "link": "#"
+        }
+      ]
+    },
+    {
+      "id": "fullstack",
+      "name": "Full-Stack Engineering",
+      "color": "#22C55E",
+      "neonClass": "neon-green",
+      "orbitRadius": 6,
+      "orbitSpeed": 0.2,
+      "size": 0.6,
+      "description": "End-to-end web applications. From databases to deployment, every layer built with purpose.",
+      "skills": ["React", "TypeScript", "Go", "Python", "PostgreSQL", "Docker"],
+      "projects": [
+        {
+          "id": "fs-1",
+          "title": "E-Commerce Platform",
+          "description": "A scalable marketplace with real-time inventory, payment processing, and analytics dashboard.",
+          "tags": ["React", "Go", "PostgreSQL"],
+          "link": "#"
+        },
+        {
+          "id": "fs-2",
+          "title": "DevOps Dashboard",
+          "description": "Centralized monitoring tool for CI/CD pipelines, container health, and deployment metrics.",
+          "tags": ["TypeScript", "Docker", "Redis"],
+          "link": "#"
+        }
+      ]
+    },
+    {
+      "id": "elearning",
+      "name": "E-Learning & Content",
+      "color": "#A855F7",
+      "neonClass": "neon-purple",
+      "orbitRadius": 8,
+      "orbitSpeed": 0.15,
+      "size": 0.45,
+      "description": "Educational platforms and content systems that make complex topics accessible and engaging.",
+      "skills": ["LMS Design", "Video Production", "Curriculum Design", "Technical Writing"],
+      "projects": [
+        {
+          "id": "el-1",
+          "title": "Code Academy Platform",
+          "description": "Interactive coding platform with live code execution, progress tracking, and peer review.",
+          "tags": ["React", "WebSockets", "Docker"],
+          "link": "#"
+        },
+        {
+          "id": "el-2",
+          "title": "Tech Tutorial Series",
+          "description": "A library of deep-dive technical tutorials covering system design and architecture patterns.",
+          "tags": ["Content", "Video", "Writing"],
+          "link": "#"
+        }
+      ]
+    },
+    {
+      "id": "nlp",
+      "name": "NLP Research",
+      "color": "#F97316",
+      "neonClass": "neon-orange",
+      "orbitRadius": 10,
+      "orbitSpeed": 0.1,
+      "size": 0.55,
+      "description": "Natural Language Processing research and applications. Turning unstructured text into structured insight.",
+      "skills": ["Python", "PyTorch", "Transformers", "spaCy", "NLTK"],
+      "projects": [
+        {
+          "id": "nlp-1",
+          "title": "Sentiment Analysis Engine",
+          "description": "Real-time sentiment classifier for social media streams with multilingual support.",
+          "tags": ["Python", "Transformers", "FastAPI"],
+          "link": "#"
+        },
+        {
+          "id": "nlp-2",
+          "title": "Document Summarizer",
+          "description": "Abstractive summarization tool for long-form documents using fine-tuned language models.",
+          "tags": ["PyTorch", "Hugging Face", "React"],
+          "link": "#"
+        }
+      ]
+    },
+    {
+      "id": "scrum",
+      "name": "Scrum & PM",
+      "color": "#06B6D4",
+      "neonClass": "neon-cyan",
+      "orbitRadius": 12,
+      "orbitSpeed": 0.08,
+      "size": 0.4,
+      "description": "Agile project management and team leadership. Shipping products on time without burning out the team.",
+      "skills": ["Scrum", "Kanban", "Jira", "Confluence", "Stakeholder Management"],
+      "projects": [
+        {
+          "id": "pm-1",
+          "title": "Agile Transformation",
+          "description": "Led a 40-person engineering org through a waterfall-to-agile transition over 6 months.",
+          "tags": ["Scrum", "Leadership", "Process"],
+          "link": "#"
+        },
+        {
+          "id": "pm-2",
+          "title": "Product Roadmap Tool",
+          "description": "Internal tool for visual roadmap planning with dependency tracking and capacity forecasting.",
+          "tags": ["React", "D3.js", "PostgreSQL"],
+          "link": "#"
+        }
+      ]
+    }
+  ]
+}
