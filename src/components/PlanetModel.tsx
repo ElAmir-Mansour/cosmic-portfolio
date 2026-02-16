@@ -1,5 +1,6 @@
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, Suspense } from "react";
 import { useFrame } from "@react-three/fiber";
+import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
 interface PlanetModelProps {
@@ -7,16 +8,51 @@ interface PlanetModelProps {
   size: number;
   orbitRadius: number;
   orbitSpeed: number;
-  onClick?: () => void;
+  onClick?: (position: THREE.Vector3) => void;
   name: string;
+  modelPath?: string;
 }
 
-const PlanetModel = ({ color, size, orbitRadius, orbitSpeed, onClick, name }: PlanetModelProps) => {
+const GLTFModel = ({ path, size }: { path: string; size: number }) => {
+  const { scene } = useGLTF(path);
+  const cloned = useMemo(() => {
+    const s = scene.clone(true);
+    // Normalize scale to fit the planet size
+    const box = new THREE.Box3().setFromObject(s);
+    const maxDim = Math.max(
+      box.max.x - box.min.x,
+      box.max.y - box.min.y,
+      box.max.z - box.min.z
+    );
+    const scale = (size * 2) / maxDim;
+    s.scale.setScalar(scale);
+    return s;
+  }, [scene, size]);
+
+  return <primitive object={cloned} />;
+};
+
+const SphereFallback = ({ color, size }: { color: string; size: number }) => {
+  const emissiveColor = useMemo(() => new THREE.Color(color), [color]);
+  return (
+    <>
+      <sphereGeometry args={[size, 32, 32]} />
+      <meshStandardMaterial
+        color={color}
+        emissive={emissiveColor}
+        emissiveIntensity={1.5}
+        toneMapped={false}
+        roughness={0.3}
+        metalness={0.7}
+      />
+    </>
+  );
+};
+
+const PlanetModel = ({ color, size, orbitRadius, orbitSpeed, onClick, name, modelPath }: PlanetModelProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const groupRef = useRef<THREE.Group>(null);
   const glowRef = useRef<THREE.Mesh>(null);
-
-  const emissiveColor = useMemo(() => new THREE.Color(color), [color]);
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime() * orbitSpeed;
@@ -29,15 +65,18 @@ const PlanetModel = ({ color, size, orbitRadius, orbitSpeed, onClick, name }: Pl
     }
   });
 
+  const handleClick = (e: any) => {
+    e.stopPropagation();
+    if (groupRef.current) {
+      onClick?.(groupRef.current.position.clone());
+    }
+  };
+
   return (
     <group ref={groupRef}>
-      {/* Planet body */}
       <mesh
         ref={meshRef}
-        onClick={(e) => {
-          e.stopPropagation();
-          onClick?.();
-        }}
+        onClick={handleClick}
         onPointerOver={(e) => {
           e.stopPropagation();
           document.body.style.cursor = "pointer";
@@ -46,14 +85,13 @@ const PlanetModel = ({ color, size, orbitRadius, orbitSpeed, onClick, name }: Pl
           document.body.style.cursor = "auto";
         }}
       >
-        <sphereGeometry args={[size, 32, 32]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={emissiveColor}
-          emissiveIntensity={0.4}
-          roughness={0.3}
-          metalness={0.7}
-        />
+        {modelPath ? (
+          <Suspense fallback={<SphereFallback color={color} size={size} />}>
+            <GLTFModel path={modelPath} size={size} />
+          </Suspense>
+        ) : (
+          <SphereFallback color={color} size={size} />
+        )}
       </mesh>
 
       {/* Glow effect */}
@@ -65,9 +103,6 @@ const PlanetModel = ({ color, size, orbitRadius, orbitSpeed, onClick, name }: Pl
           opacity={0.08}
         />
       </mesh>
-
-      {/* Label */}
-      {/* Placeholder for future HTML label or drei Text */}
     </group>
   );
 };

@@ -22,6 +22,7 @@ export interface Planet {
   description: string;
   skills: string[];
   projects: Project[];
+  modelPath?: string;
 }
 
 export interface Profile {

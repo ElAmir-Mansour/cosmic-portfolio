@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import type { Planet } from "@/services/DataService";
+import NLPSandbox from "./NLPSandbox";
 
 interface PlanetDrawerProps {
   planet: Planet | null;
@@ -86,8 +87,11 @@ const PlanetDrawer = ({ planet, onClose }: PlanetDrawerProps) => {
                       </div>
                     </a>
                   ))}
-                </div>
               </div>
+
+              {/* NLP Sandbox for NLP Research planet */}
+              {planet.id === "nlp" && <NLPSandbox />}
+            </div>
             </div>
           </motion.aside>
         </>
