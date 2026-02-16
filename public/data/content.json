@@ -1,8 +1,8 @@
 {
   "profile": {
-    "name": "Your Name",
-    "title": "Full-Stack Engineer & Creative Technologist",
-    "tagline": "Building at the intersection of code, design, and intelligence.",
+    "name": "ElAmir",
+    "title": "Software Engineer · NLP Researcher · Instructional Designer",
+    "tagline": "Building agentic systems and applying NLP to mental health. 10+ years turning complex ideas into software, research, and courses that make a real difference.",
     "email": "hello@example.com",
     "github": "https://github.com",
     "linkedin": "https://linkedin.com"
@@ -70,7 +70,7 @@
       "orbitRadius": 8,
       "orbitSpeed": 0.15,
       "size": 0.45,
-      "description": "Educational platforms and content systems that make complex topics accessible and engaging.",
+      "description": "Educational platforms and content systems that make complex topics accessible and engaging. Over a decade of teaching experience through 'Learn With ElAmir.'",
       "skills": ["LMS Design", "Video Production", "Curriculum Design", "Technical Writing"],
       "projects": [
         {
@@ -97,7 +97,7 @@
       "orbitRadius": 10,
       "orbitSpeed": 0.1,
       "size": 0.55,
-      "description": "Natural Language Processing research and applications. Turning unstructured text into structured insight.",
+      "description": "Natural Language Processing research focused on mental health applications. Using transformer models and linguistic analysis to detect early signs of depression from text data.",
       "skills": ["Python", "PyTorch", "Transformers", "spaCy", "NLTK"],
       "projects": [
         {
