@@ -27,21 +27,21 @@ const Sun = () => (
 );
 
 const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet }: GalaxySceneProps) => {
-  const [focusTarget, setFocusTarget] = useState<THREE.Vector3 | null>(null);
+  const [followRef, setFollowRef] = useState<React.RefObject<THREE.Group> | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const controlsRef = useRef<any>(null);
 
   useEffect(() => {
     if (!selectedPlanet) {
-      setFocusTarget(null);
+      setFollowRef(null);
       setIsAnimating(false);
       if (controlsRef.current) controlsRef.current.enabled = true;
     }
   }, [selectedPlanet]);
 
   const handlePlanetClick = useCallback(
-    (planet: Planet, position: THREE.Vector3) => {
-      setFocusTarget(position);
+    (planet: Planet, groupRef: React.RefObject<THREE.Group>) => {
+      setFollowRef(groupRef);
       setIsAnimating(true);
       if (controlsRef.current) controlsRef.current.enabled = false;
       onPlanetClick(planet);
@@ -50,7 +50,7 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet }: GalaxySceneProp
   );
 
   const handleReset = useCallback(() => {
-    setFocusTarget(null);
+    setFollowRef(null);
     setIsAnimating(false);
     if (controlsRef.current) controlsRef.current.enabled = true;
     onPlanetClick(null as any);
@@ -77,7 +77,7 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet }: GalaxySceneProp
               modelPath={planet.modelPath}
               glowIntensity={planet.glowIntensity}
               emissiveColor={planet.emissiveColor}
-              onClick={(pos) => handlePlanetClick(planet, pos)}
+              onClick={(ref) => handlePlanetClick(planet, ref)}
             />
           ))}
           {/* Orbit rings */}
@@ -87,7 +87,7 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet }: GalaxySceneProp
               <meshBasicMaterial color="#ffffff" transparent opacity={0.06} side={2} />
             </mesh>
           ))}
-          <CameraController target={focusTarget} />
+          <CameraController targetRef={followRef} />
           <OrbitControls
             ref={controlsRef}
             enablePan={false}
