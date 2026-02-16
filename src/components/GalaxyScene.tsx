@@ -60,7 +60,7 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet }: GalaxySceneProp
     <div className="w-full h-full">
       <Canvas
         camera={{ position: [0, 12, 20], fov: 50 }}
-        style={{ background: "transparent" }}
+        style={{ background: "#000000" }}
       >
         <Suspense fallback={null}>
           <ambientLight intensity={0.1} />
