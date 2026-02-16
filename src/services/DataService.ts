@@ -86,3 +86,8 @@ export async function getAllContent(): Promise<ContentData> {
 export function clearCache() {
   cachedData = null;
 }
+
+export function saveContent(data: ContentData) {
+  localStorage.setItem("portfolio-content", JSON.stringify(data));
+  cachedData = data;
+}

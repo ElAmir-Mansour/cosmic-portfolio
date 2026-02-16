@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Starfield from "@/components/Starfield";
-import { getAllContent, type ContentData, type Planet, type Project } from "@/services/DataService";
+import { getAllContent, saveContent, type ContentData, type Planet, type Project } from "@/services/DataService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,7 +45,7 @@ const AdminPage = () => {
 
   const saveChanges = () => {
     if (!content) return;
-    localStorage.setItem("portfolio-content", JSON.stringify(content));
+    saveContent(content);
     setSaved(true);
     setHasChanges(false);
     setTimeout(() => setSaved(false), 2000);
