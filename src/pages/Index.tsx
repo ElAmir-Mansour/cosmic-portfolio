@@ -1,13 +1,21 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Starfield from "@/components/Starfield";
-import GalaxyScene from "@/components/GalaxyScene";
 import PlanetDrawer from "@/components/PlanetDrawer";
 import StarMap from "@/components/StarMap";
 import ContactSection from "@/components/ContactSection";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getAllContent, type Planet, type ContentData } from "@/services/DataService";
+
+const GalaxyScene = lazy(() => import("@/components/GalaxyScene"));
+
+const GalaxyLoader = () => (
+  <div className="flex flex-col items-center justify-center h-screen gap-4">
+    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    <p className="text-sm text-muted-foreground animate-pulse">Loading Galaxy…</p>
+  </div>
+);
 
 const Index = () => {
   const [content, setContent] = useState<ContentData | null>(null);
@@ -92,7 +100,9 @@ const Index = () => {
             className="sticky top-0 h-screen z-20"
             id="explore"
           >
-            <GalaxyScene planets={content.planets} onPlanetClick={setSelectedPlanet} selectedPlanet={selectedPlanet} />
+            <Suspense fallback={<GalaxyLoader />}>
+              <GalaxyScene planets={content.planets} onPlanetClick={setSelectedPlanet} selectedPlanet={selectedPlanet} />
+            </Suspense>
           </motion.div>
         )}
       </div>

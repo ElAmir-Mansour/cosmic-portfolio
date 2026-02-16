@@ -9,6 +9,8 @@ export interface Project {
   description: string;
   tags: string[];
   link: string;
+  videoUrl?: string;
+  studentCount?: number;
 }
 
 export interface Planet {
@@ -23,6 +25,8 @@ export interface Planet {
   skills: string[];
   projects: Project[];
   modelPath?: string;
+  glowIntensity?: number;
+  emissiveColor?: string;
 }
 
 export interface Profile {

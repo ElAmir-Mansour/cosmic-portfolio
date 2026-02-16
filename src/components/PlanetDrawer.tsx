@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Play, Users, ExternalLink } from "lucide-react";
 import type { Planet } from "@/services/DataService";
 import NLPSandbox from "./NLPSandbox";
 
@@ -8,12 +9,112 @@ interface PlanetDrawerProps {
   onClose: () => void;
 }
 
+const VideoModal = ({ url, onClose }: { url: string; onClose: () => void }) => {
+  // Extract YouTube embed URL
+  const getEmbedUrl = (raw: string) => {
+    const match = raw.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([^&?]+)/);
+    return match ? `https://www.youtube.com/embed/${match[1]}?autoplay=1` : raw;
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        className="w-full max-w-2xl aspect-video rounded-xl overflow-hidden border border-border shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <iframe
+          src={getEmbedUrl(url)}
+          className="w-full h-full"
+          allow="autoplay; encrypted-media"
+          allowFullScreen
+        />
+      </motion.div>
+    </motion.div>
+  );
+};
+
+const ELearningCard = ({ project }: { project: Planet["projects"][0] }) => {
+  const [showVideo, setShowVideo] = useState(false);
+
+  return (
+    <>
+      <div className="rounded-lg overflow-hidden bg-secondary/50 border border-border transition-colors hover:border-primary/30">
+        {/* Thumbnail area */}
+        <div className="relative h-32 bg-gradient-to-br from-accent to-secondary flex items-center justify-center">
+          {project.videoUrl ? (
+            <button
+              onClick={() => setShowVideo(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/90 text-primary-foreground text-sm font-medium hover:bg-primary transition-colors"
+            >
+              <Play className="w-4 h-4" /> Watch Trailer
+            </button>
+          ) : (
+            <span className="text-2xl">📚</span>
+          )}
+        </div>
+        <div className="p-4">
+          <h4 className="font-medium text-foreground mb-1">{project.title}</h4>
+          <p className="text-sm text-muted-foreground mb-3">{project.description}</p>
+          <div className="flex items-center justify-between">
+            <div className="flex flex-wrap gap-1.5">
+              {project.tags.map((tag) => (
+                <span key={tag} className="px-2 py-0.5 text-xs rounded bg-background text-muted-foreground">{tag}</span>
+              ))}
+            </div>
+            {project.studentCount && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Users className="w-3 h-3" /> {project.studentCount.toLocaleString()}
+              </span>
+            )}
+          </div>
+          {project.link && project.link !== "#" && (
+            <a href={project.link} target="_blank" rel="noopener noreferrer" className="mt-3 flex items-center gap-1 text-xs text-primary hover:underline">
+              <ExternalLink className="w-3 h-3" /> View Course
+            </a>
+          )}
+        </div>
+      </div>
+      <AnimatePresence>
+        {showVideo && project.videoUrl && (
+          <VideoModal url={project.videoUrl} onClose={() => setShowVideo(false)} />
+        )}
+      </AnimatePresence>
+    </>
+  );
+};
+
+const DefaultProjectCard = ({ project }: { project: Planet["projects"][0] }) => (
+  <a
+    href={project.link}
+    className="block p-4 rounded-lg bg-secondary/50 border border-border transition-colors hover:border-primary/30"
+  >
+    <h4 className="font-medium text-foreground mb-1">{project.title}</h4>
+    <p className="text-sm text-muted-foreground mb-3">{project.description}</p>
+    <div className="flex flex-wrap gap-1.5">
+      {project.tags.map((tag) => (
+        <span key={tag} className="px-2 py-0.5 text-xs rounded bg-background text-muted-foreground">{tag}</span>
+      ))}
+    </div>
+  </a>
+);
+
 const PlanetDrawer = ({ planet, onClose }: PlanetDrawerProps) => {
+  const isELearning = planet?.id === "elearning";
+  const isNLP = planet?.id === "nlp";
+
   return (
     <AnimatePresence>
       {planet && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -21,7 +122,6 @@ const PlanetDrawer = ({ planet, onClose }: PlanetDrawerProps) => {
             className="fixed inset-0 z-40 bg-background/40"
             onClick={onClose}
           />
-          {/* Panel */}
           <motion.aside
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
@@ -32,16 +132,10 @@ const PlanetDrawer = ({ planet, onClose }: PlanetDrawerProps) => {
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: planet.color, boxShadow: `0 0 12px ${planet.color}` }}
-                  />
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: planet.color, boxShadow: `0 0 12px ${planet.color}` }} />
                   <h2 className="text-xl font-semibold text-foreground">{planet.name}</h2>
                 </div>
-                <button
-                  onClick={onClose}
-                  className="p-2 rounded-lg text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary"
-                >
+                <button onClick={onClose} className="p-2 rounded-lg text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -53,45 +147,29 @@ const PlanetDrawer = ({ planet, onClose }: PlanetDrawerProps) => {
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Skills</h3>
                 <div className="flex flex-wrap gap-2">
                   {planet.skills.map((skill) => (
-                    <span
-                      key={skill}
-                      className="px-2.5 py-1 text-xs rounded-md bg-secondary text-secondary-foreground"
-                    >
-                      {skill}
-                    </span>
+                    <span key={skill} className="px-2.5 py-1 text-xs rounded-md bg-secondary text-secondary-foreground">{skill}</span>
                   ))}
                 </div>
               </div>
 
-              {/* Projects */}
+              {/* Projects / Course Modules */}
               <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Projects</h3>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                  {isELearning ? "Course Modules" : "Projects"}
+                </h3>
                 <div className="space-y-4">
-                  {planet.projects.map((project) => (
-                    <a
-                      key={project.id}
-                      href={project.link}
-                      className="block p-4 rounded-lg bg-secondary/50 border border-border transition-colors hover:border-primary/30"
-                    >
-                      <h4 className="font-medium text-foreground mb-1">{project.title}</h4>
-                      <p className="text-sm text-muted-foreground mb-3">{project.description}</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {project.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="px-2 py-0.5 text-xs rounded bg-background text-muted-foreground"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </a>
-                  ))}
+                  {planet.projects.map((project) =>
+                    isELearning ? (
+                      <ELearningCard key={project.id} project={project} />
+                    ) : (
+                      <DefaultProjectCard key={project.id} project={project} />
+                    )
+                  )}
+                </div>
               </div>
 
-              {/* NLP Sandbox for NLP Research planet */}
-              {planet.id === "nlp" && <NLPSandbox />}
-            </div>
+              {/* NLP Sandbox */}
+              {isNLP && <NLPSandbox />}
             </div>
           </motion.aside>
         </>
