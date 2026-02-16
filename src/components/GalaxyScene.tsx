@@ -1,4 +1,4 @@
-import { Suspense, useState, useCallback, useRef } from "react";
+import { Suspense, useState, useCallback, useRef, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stars } from "@react-three/drei";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
@@ -10,6 +10,7 @@ import type { Planet } from "@/services/DataService";
 interface GalaxySceneProps {
   planets: Planet[];
   onPlanetClick: (planet: Planet) => void;
+  selectedPlanet: Planet | null;
 }
 
 const Sun = () => (
@@ -25,10 +26,19 @@ const Sun = () => (
   </mesh>
 );
 
-const GalaxyScene = ({ planets, onPlanetClick }: GalaxySceneProps) => {
+const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet }: GalaxySceneProps) => {
   const [focusTarget, setFocusTarget] = useState<THREE.Vector3 | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const controlsRef = useRef<any>(null);
+
+  // Reset camera when selectedPlanet becomes null (drawer closed)
+  useEffect(() => {
+    if (!selectedPlanet) {
+      setFocusTarget(null);
+      setIsAnimating(false);
+      if (controlsRef.current) controlsRef.current.enabled = true;
+    }
+  }, [selectedPlanet]);
 
   const handlePlanetClick = useCallback(
     (planet: Planet, position: THREE.Vector3) => {
@@ -44,7 +54,8 @@ const GalaxyScene = ({ planets, onPlanetClick }: GalaxySceneProps) => {
     setFocusTarget(null);
     setIsAnimating(false);
     if (controlsRef.current) controlsRef.current.enabled = true;
-  }, []);
+    onPlanetClick(null as any);
+  }, [onPlanetClick]);
 
   return (
     <div className="w-full h-full">
