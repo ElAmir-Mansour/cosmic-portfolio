@@ -6,10 +6,13 @@ interface Token {
   type: "noun" | "verb" | "adjective" | "adverb" | "other" | "punctuation";
 }
 
-interface SentimentResult {
-  label: string;
-  score: number;
+interface AnalysisResult {
+  sentimentLabel: string;
+  sentimentPolarity: number;
+  lexicalDiversity: number;
   tokens: Token[];
+  wordCount: number;
+  uniqueWords: number;
 }
 
 const TOKEN_COLORS: Record<Token["type"], string> = {
@@ -32,10 +35,10 @@ const TOKEN_LABELS: Record<Token["type"], string> = {
 
 // Simple mock POS tagger
 function mockTokenize(text: string): Token[] {
-  const nouns = new Set(["model", "sentence", "analysis", "data", "text", "research", "depression", "language", "word", "detection", "system", "network", "learning", "transformer", "attention", "token", "embedding", "vector", "classification", "sentiment", "person", "world", "thing", "life", "time", "day", "way", "people", "man", "woman", "child"]);
-  const verbs = new Set(["is", "are", "was", "were", "have", "has", "had", "do", "does", "did", "run", "detect", "analyze", "predict", "train", "process", "classify", "feel", "think", "know", "want", "need", "use", "find", "give", "tell", "work", "call", "try", "ask", "seem", "come", "go", "make", "take", "see", "look", "get", "say"]);
-  const adjectives = new Set(["good", "bad", "happy", "sad", "great", "small", "large", "deep", "new", "old", "high", "low", "long", "short", "natural", "neural", "fine", "beautiful", "terrible", "wonderful", "awful", "amazing", "depressed", "anxious", "positive", "negative"]);
-  const adverbs = new Set(["very", "really", "quite", "always", "never", "often", "sometimes", "well", "badly", "quickly", "slowly", "not", "also", "just", "still", "already"]);
+  const nouns = new Set(["model", "sentence", "analysis", "data", "text", "research", "depression", "language", "word", "detection", "system", "network", "learning", "transformer", "attention", "token", "embedding", "vector", "classification", "sentiment", "person", "world", "thing", "life", "time", "day", "way", "people", "man", "woman", "child", "help", "hope", "fear", "anxiety", "mood", "health", "patient", "therapy", "brain", "mind", "study", "score", "result"]);
+  const verbs = new Set(["is", "are", "was", "were", "have", "has", "had", "do", "does", "did", "run", "detect", "analyze", "predict", "train", "process", "classify", "feel", "think", "know", "want", "need", "use", "find", "give", "tell", "work", "call", "try", "ask", "seem", "come", "go", "make", "take", "see", "look", "get", "say", "struggle", "suffer", "cope", "improve"]);
+  const adjectives = new Set(["good", "bad", "happy", "sad", "great", "small", "large", "deep", "new", "old", "high", "low", "long", "short", "natural", "neural", "fine", "beautiful", "terrible", "wonderful", "awful", "amazing", "depressed", "anxious", "positive", "negative", "lonely", "tired", "hopeless", "worthless", "empty", "numb", "exhausted"]);
+  const adverbs = new Set(["very", "really", "quite", "always", "never", "often", "sometimes", "well", "badly", "quickly", "slowly", "not", "also", "just", "still", "already", "constantly", "barely", "hardly"]);
   const others = new Set(["the", "a", "an", "in", "on", "at", "to", "for", "of", "with", "by", "from", "up", "about", "into", "through", "during", "before", "after", "above", "below", "between", "this", "that", "these", "those", "i", "you", "he", "she", "it", "we", "they", "my", "your", "his", "her", "its", "our", "their", "and", "but", "or", "so", "if", "when", "because"]);
 
   const words = text.match(/[\w']+|[^\w\s]/g) || [];
@@ -47,7 +50,6 @@ function mockTokenize(text: string): Token[] {
     if (adjectives.has(lower)) return { text: w, type: "adjective" };
     if (adverbs.has(lower)) return { text: w, type: "adverb" };
     if (others.has(lower)) return { text: w, type: "other" };
-    // Default heuristic: ends in -ly → adverb, -tion/-ment/-ness → noun, -ed/-ing → verb
     if (lower.endsWith("ly")) return { text: w, type: "adverb" };
     if (lower.endsWith("tion") || lower.endsWith("ment") || lower.endsWith("ness")) return { text: w, type: "noun" };
     if (lower.endsWith("ed") || lower.endsWith("ing")) return { text: w, type: "verb" };
@@ -56,49 +58,95 @@ function mockTokenize(text: string): Token[] {
   });
 }
 
-function mockSentiment(tokens: Token[]): { label: string; score: number } {
-  const positive = new Set(["good", "great", "happy", "wonderful", "amazing", "beautiful", "love", "excellent", "fantastic", "positive", "best"]);
-  const negative = new Set(["bad", "sad", "terrible", "awful", "depressed", "anxious", "hate", "worst", "negative", "poor", "horrible"]);
-  let score = 0;
+function analyzeText(text: string): AnalysisResult {
+  const tokens = mockTokenize(text);
+  const contentTokens = tokens.filter((t) => t.type !== "punctuation");
+  const words = contentTokens.map((t) => t.text.toLowerCase());
+  const uniqueWords = new Set(words);
+
+  // Sentiment Polarity: scored from -1 to +1, then mapped to 0-1 for display
+  const positive = new Set(["good", "great", "happy", "wonderful", "amazing", "beautiful", "love", "excellent", "fantastic", "positive", "best", "hope", "improve", "well", "fine", "better", "helpful", "strong"]);
+  const negative = new Set(["bad", "sad", "terrible", "awful", "depressed", "anxious", "hate", "worst", "negative", "poor", "horrible", "lonely", "tired", "hopeless", "worthless", "empty", "numb", "exhausted", "struggle", "suffer", "fear"]);
+
+  let rawScore = 0;
   let negated = false;
   tokens.forEach((t) => {
     const w = t.text.toLowerCase();
-    if (w === "not" || w === "never" || w === "no") { negated = true; return; }
-    if (positive.has(w)) score += negated ? -1 : 1;
-    if (negative.has(w)) score += negated ? 1 : -1;
+    if (w === "not" || w === "never" || w === "no" || w === "n't") { negated = true; return; }
+    if (positive.has(w)) rawScore += negated ? -1 : 1;
+    if (negative.has(w)) rawScore += negated ? 1 : -1;
     negated = false;
   });
-  const normalized = Math.tanh(score * 0.5);
-  const label = normalized > 0.15 ? "Positive" : normalized < -0.15 ? "Negative" : "Neutral";
-  return { label, score: Math.round((normalized + 1) * 50) / 100 };
+
+  const sentimentPolarity = Math.tanh(rawScore * 0.4); // -1 to 1
+  const sentimentLabel = sentimentPolarity > 0.15 ? "Positive" : sentimentPolarity < -0.15 ? "Negative" : "Neutral";
+
+  // Lexical Diversity: Type-Token Ratio (TTR)
+  // TTR = unique words / total words. Higher values suggest more varied vocabulary.
+  const lexicalDiversity = words.length > 0 ? uniqueWords.size / words.length : 0;
+
+  return {
+    sentimentLabel,
+    sentimentPolarity,
+    lexicalDiversity,
+    tokens,
+    wordCount: words.length,
+    uniqueWords: uniqueWords.size,
+  };
 }
+
+const MetricBar = ({ label, value, color, displayValue }: { label: string; value: number; color: string; displayValue: string }) => (
+  <div className="space-y-1.5">
+    <div className="flex items-center justify-between">
+      <span className="text-xs font-mono text-muted-foreground">{label}</span>
+      <span className="text-xs font-mono text-muted-foreground">{displayValue}</span>
+    </div>
+    <div className="h-2.5 rounded-full bg-secondary overflow-hidden">
+      <motion.div
+        initial={{ width: 0 }}
+        animate={{ width: `${Math.abs(value) * 100}%` }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="h-full rounded-full"
+        style={{ backgroundColor: color }}
+      />
+    </div>
+  </div>
+);
 
 const NLPSandbox = () => {
   const [input, setInput] = useState("");
-  const [result, setResult] = useState<SentimentResult | null>(null);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
 
   const handleAnalyze = () => {
     if (!input.trim()) return;
     setAnalyzing(true);
-    // Simulate processing delay
     setTimeout(() => {
-      const tokens = mockTokenize(input);
-      const sentiment = mockSentiment(tokens);
-      setResult({ ...sentiment, tokens });
+      setResult(analyzeText(input));
       setAnalyzing(false);
     }, 600);
   };
 
-  const sentimentColor = result?.label === "Positive" ? "hsl(142, 70%, 49%)" : result?.label === "Negative" ? "hsl(0, 84%, 60%)" : "hsl(25, 95%, 55%)";
+  const polarityColor = result
+    ? result.sentimentPolarity > 0.15 ? "hsl(142, 70%, 49%)"
+    : result.sentimentPolarity < -0.15 ? "hsl(0, 84%, 60%)"
+    : "hsl(25, 95%, 55%)"
+    : "hsl(215, 20%, 55%)";
+
+  // Lexical diversity color: low (red) to high (green)
+  const diversityColor = result
+    ? result.lexicalDiversity > 0.7 ? "hsl(142, 70%, 49%)"
+    : result.lexicalDiversity > 0.4 ? "hsl(45, 90%, 55%)"
+    : "hsl(0, 84%, 60%)"
+    : "hsl(215, 20%, 55%)";
 
   return (
     <div className="mt-6 p-4 rounded-lg bg-secondary/30 border border-border">
       <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-        Model Sandbox
+        NLP Research Sandbox
       </h3>
       <p className="text-xs text-muted-foreground mb-4">
-        Type a sentence to see mock tokenization and sentiment analysis. This demonstrates the NLP pipeline used in depression detection research.
+        Type a sentence to see how text analysis pipelines process language. This mirrors the feature extraction used in depression detection research.
       </p>
 
       <div className="flex gap-2 mb-4">
@@ -107,7 +155,7 @@ const NLPSandbox = () => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
-          placeholder="e.g. I feel really happy about this research"
+          placeholder="e.g. I feel so tired and empty all the time"
           className="flex-1 h-9 px-3 text-sm rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
         />
         <button
@@ -125,7 +173,7 @@ const NLPSandbox = () => {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="space-y-4"
+            className="space-y-5"
           >
             {/* Tokenization */}
             <div>
@@ -148,33 +196,37 @@ const NLPSandbox = () => {
               </div>
             </div>
 
-            {/* Sentiment */}
-            <div>
-              <p className="text-xs text-muted-foreground mb-2 font-mono">Sentiment Classification</p>
-              <div className="flex items-center gap-3">
-                <span
-                  className="px-3 py-1 rounded-md text-sm font-semibold"
-                  style={{
-                    backgroundColor: `${sentimentColor}20`,
-                    border: `1px solid ${sentimentColor}40`,
-                    color: sentimentColor,
-                  }}
-                >
-                  {result.label}
-                </span>
-                <div className="flex-1 h-2 rounded-full bg-secondary overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${result.score * 100}%` }}
-                    transition={{ duration: 0.5 }}
-                    className="h-full rounded-full"
-                    style={{ backgroundColor: sentimentColor }}
-                  />
-                </div>
-                <span className="text-xs font-mono text-muted-foreground">
-                  {result.score.toFixed(2)}
-                </span>
-              </div>
+            {/* Multi-layer Metric Bars */}
+            <div className="space-y-4 p-3 rounded-lg bg-background/50 border border-border">
+              <p className="text-xs text-muted-foreground font-mono mb-1">Linguistic Metrics</p>
+
+              <MetricBar
+                label="Sentiment Polarity"
+                value={(result.sentimentPolarity + 1) / 2}
+                color={polarityColor}
+                displayValue={`${result.sentimentLabel} (${result.sentimentPolarity > 0 ? "+" : ""}${result.sentimentPolarity.toFixed(2)})`}
+              />
+
+              <MetricBar
+                label="Lexical Diversity (TTR)"
+                value={result.lexicalDiversity}
+                color={diversityColor}
+                displayValue={`${result.lexicalDiversity.toFixed(2)} (${result.uniqueWords}/${result.wordCount} unique)`}
+              />
+            </div>
+
+            {/* Research Context */}
+            <div className="p-3 rounded-lg bg-accent/10 border border-accent/20">
+              <p className="text-xs font-semibold text-accent-foreground mb-2">How This Relates to Depression Detection</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                <strong>Sentiment Polarity</strong> measures the positive or negative tone of text. In clinical NLP, persistent negative polarity across patient language samples is a known marker of depressive states. Models trained on labeled clinical data learn to weigh specific word patterns and negation contexts rather than simple keyword matching.
+              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed mt-2">
+                <strong>Lexical Diversity</strong> (Type-Token Ratio) captures how varied a person's word choice is. Research shows that individuals with depression often exhibit lower lexical diversity, using a smaller set of repeated words. This metric serves as one of several linguistic features fed into transformer-based classifiers for early screening.
+              </p>
+              <p className="text-xs text-muted-foreground/70 mt-2 italic">
+                Note: This is a simplified simulation. Production systems use fine-tuned transformer models (e.g., BERT, RoBERTa) trained on clinical text corpora with validated diagnostic labels.
+              </p>
             </div>
           </motion.div>
         )}

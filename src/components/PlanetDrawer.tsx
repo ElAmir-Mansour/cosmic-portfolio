@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Play, Users, ExternalLink } from "lucide-react";
+import { X, Play, Users, ExternalLink, BookOpen, Award } from "lucide-react";
 import type { Planet } from "@/services/DataService";
 import NLPSandbox from "./NLPSandbox";
 
@@ -10,7 +10,6 @@ interface PlanetDrawerProps {
 }
 
 const VideoModal = ({ url, onClose }: { url: string; onClose: () => void }) => {
-  // Extract YouTube embed URL
   const getEmbedUrl = (raw: string) => {
     const match = raw.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([^&?]+)/);
     return match ? `https://www.youtube.com/embed/${match[1]}?autoplay=1` : raw;
@@ -42,6 +41,36 @@ const VideoModal = ({ url, onClose }: { url: string; onClose: () => void }) => {
   );
 };
 
+const ImpactStats = ({ planet }: { planet: Planet }) => {
+  const totalStudents = planet.projects.reduce((sum, p) => sum + (p.studentCount || 0), 0);
+  const courseCount = planet.projects.length;
+
+  return (
+    <div className="mb-6 p-4 rounded-lg bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20">
+      <div className="flex items-center gap-2 mb-3">
+        <Award className="w-4 h-4 text-primary" />
+        <span className="text-xs font-semibold uppercase tracking-wider text-primary">10+ Years of Teaching</span>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <div className="text-center">
+          <p className="text-xl font-bold text-foreground">10+</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Years</p>
+        </div>
+        <div className="text-center">
+          <p className="text-xl font-bold text-foreground">{courseCount}</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Courses</p>
+        </div>
+        <div className="text-center">
+          <p className="text-xl font-bold text-foreground">
+            {totalStudents > 0 ? totalStudents.toLocaleString() : "500+"}
+          </p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Students</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ELearningCard = ({ project }: { project: Planet["projects"][0] }) => {
   const [showVideo, setShowVideo] = useState(false);
 
@@ -58,7 +87,7 @@ const ELearningCard = ({ project }: { project: Planet["projects"][0] }) => {
               <Play className="w-4 h-4" /> Watch Trailer
             </button>
           ) : (
-            <span className="text-2xl">📚</span>
+            <BookOpen className="w-8 h-8 text-muted-foreground/40" />
           )}
         </div>
         <div className="p-4">
@@ -141,6 +170,9 @@ const PlanetDrawer = ({ planet, onClose }: PlanetDrawerProps) => {
               </div>
 
               <p className="text-muted-foreground text-sm mb-6">{planet.description}</p>
+
+              {/* Impact Stats for E-Learning */}
+              {isELearning && <ImpactStats planet={planet} />}
 
               {/* Skills */}
               <div className="mb-6">
