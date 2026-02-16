@@ -43,16 +43,40 @@ const PostEffects = () => {
 
 const LoadingBar = () => {
   const { progress, active } = useProgress();
-  if (!active && progress >= 100) return null;
+  const [visible, setVisible] = useState(true);
+  const [displayProgress, setDisplayProgress] = useState(0);
+
+  useEffect(() => {
+    // If no assets to load, simulate a quick ramp-up then hide
+    if (!active && progress === 0) {
+      let p = 0;
+      const interval = setInterval(() => {
+        p += 15;
+        setDisplayProgress(Math.min(p, 100));
+        if (p >= 100) {
+          clearInterval(interval);
+          setTimeout(() => setVisible(false), 300);
+        }
+      }, 80);
+      return () => clearInterval(interval);
+    }
+    // Real asset loading
+    setDisplayProgress(progress);
+    if (!active && progress >= 100) {
+      setTimeout(() => setVisible(false), 300);
+    }
+  }, [progress, active]);
+
+  if (!visible) return null;
   return (
     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm">
       <div className="w-48 h-1 rounded-full bg-secondary overflow-hidden">
         <div
           className="h-full rounded-full bg-primary transition-all duration-300"
-          style={{ width: `${progress}%` }}
+          style={{ width: `${displayProgress}%` }}
         />
       </div>
-      <p className="mt-3 text-xs text-muted-foreground font-mono">{Math.round(progress)}%</p>
+      <p className="mt-3 text-xs text-muted-foreground font-mono">{Math.round(displayProgress)}%</p>
     </div>
   );
 };
