@@ -19,10 +19,10 @@ const Sun = () => (
     <meshStandardMaterial
       color="#fbbf24"
       emissive="#fbbf24"
-      emissiveIntensity={2}
+      emissiveIntensity={3}
       toneMapped={false}
     />
-    <pointLight color="#fbbf24" intensity={2} distance={50} />
+    <pointLight color="#fbbf24" intensity={3} distance={60} />
   </mesh>
 );
 
@@ -31,7 +31,6 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet }: GalaxySceneProp
   const [isAnimating, setIsAnimating] = useState(false);
   const controlsRef = useRef<any>(null);
 
-  // Reset camera when selectedPlanet becomes null (drawer closed)
   useEffect(() => {
     if (!selectedPlanet) {
       setFocusTarget(null);
@@ -64,7 +63,7 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet }: GalaxySceneProp
         style={{ background: "transparent" }}
       >
         <Suspense fallback={null}>
-          <ambientLight intensity={0.15} />
+          <ambientLight intensity={0.1} />
           <Stars radius={100} depth={60} count={3000} factor={3} saturation={0} fade speed={0.5} />
           <Sun />
           {planets.map((planet) => (
@@ -76,6 +75,8 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet }: GalaxySceneProp
               orbitSpeed={planet.orbitSpeed}
               name={planet.name}
               modelPath={planet.modelPath}
+              glowIntensity={planet.glowIntensity}
+              emissiveColor={planet.emissiveColor}
               onClick={(pos) => handlePlanetClick(planet, pos)}
             />
           ))}
@@ -96,19 +97,17 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet }: GalaxySceneProp
             autoRotate={!isAnimating}
             autoRotateSpeed={0.3}
           />
-          {/* Post-processing */}
           <EffectComposer>
             <Bloom
               luminanceThreshold={1.0}
               luminanceSmoothing={0.3}
-              intensity={1.2}
+              intensity={1.5}
               mipmapBlur
             />
             <Vignette offset={0.3} darkness={0.7} />
           </EffectComposer>
         </Suspense>
       </Canvas>
-      {/* Reset button when focused */}
       {isAnimating && (
         <button
           onClick={handleReset}
