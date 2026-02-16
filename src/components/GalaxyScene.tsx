@@ -1,7 +1,10 @@
-import { Suspense, useState } from "react";
+import { Suspense, useState, useCallback, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stars } from "@react-three/drei";
+import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
+import * as THREE from "three";
 import PlanetModel from "./PlanetModel";
+import CameraController from "./CameraController";
 import type { Planet } from "@/services/DataService";
 
 interface GalaxySceneProps {
@@ -12,12 +15,37 @@ interface GalaxySceneProps {
 const Sun = () => (
   <mesh>
     <sphereGeometry args={[1.2, 64, 64]} />
-    <meshBasicMaterial color="#fbbf24" />
+    <meshStandardMaterial
+      color="#fbbf24"
+      emissive="#fbbf24"
+      emissiveIntensity={2}
+      toneMapped={false}
+    />
     <pointLight color="#fbbf24" intensity={2} distance={50} />
   </mesh>
 );
 
 const GalaxyScene = ({ planets, onPlanetClick }: GalaxySceneProps) => {
+  const [focusTarget, setFocusTarget] = useState<THREE.Vector3 | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const controlsRef = useRef<any>(null);
+
+  const handlePlanetClick = useCallback(
+    (planet: Planet, position: THREE.Vector3) => {
+      setFocusTarget(position);
+      setIsAnimating(true);
+      if (controlsRef.current) controlsRef.current.enabled = false;
+      onPlanetClick(planet);
+    },
+    [onPlanetClick]
+  );
+
+  const handleReset = useCallback(() => {
+    setFocusTarget(null);
+    setIsAnimating(false);
+    if (controlsRef.current) controlsRef.current.enabled = true;
+  }, []);
+
   return (
     <div className="w-full h-full">
       <Canvas
@@ -36,7 +64,8 @@ const GalaxyScene = ({ planets, onPlanetClick }: GalaxySceneProps) => {
               orbitRadius={planet.orbitRadius}
               orbitSpeed={planet.orbitSpeed}
               name={planet.name}
-              onClick={() => onPlanetClick(planet)}
+              modelPath={planet.modelPath}
+              onClick={(pos) => handlePlanetClick(planet, pos)}
             />
           ))}
           {/* Orbit rings */}
@@ -46,16 +75,37 @@ const GalaxyScene = ({ planets, onPlanetClick }: GalaxySceneProps) => {
               <meshBasicMaterial color="#ffffff" transparent opacity={0.06} side={2} />
             </mesh>
           ))}
+          <CameraController target={focusTarget} />
           <OrbitControls
+            ref={controlsRef}
             enablePan={false}
             enableZoom={true}
             minDistance={8}
             maxDistance={35}
-            autoRotate
+            autoRotate={!isAnimating}
             autoRotateSpeed={0.3}
           />
+          {/* Post-processing */}
+          <EffectComposer>
+            <Bloom
+              luminanceThreshold={0.8}
+              luminanceSmoothing={0.3}
+              intensity={1.2}
+              mipmapBlur
+            />
+            <Vignette offset={0.3} darkness={0.7} />
+          </EffectComposer>
         </Suspense>
       </Canvas>
+      {/* Reset button when focused */}
+      {isAnimating && (
+        <button
+          onClick={handleReset}
+          className="absolute top-4 left-4 z-30 px-3 py-1.5 text-xs font-medium rounded-md glass text-foreground hover:bg-secondary/50 transition-colors"
+        >
+          ← Galaxy View
+        </button>
+      )}
     </div>
   );
 };
