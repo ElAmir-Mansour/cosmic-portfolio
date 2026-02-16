@@ -99,7 +99,7 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet }: GalaxySceneProp
           {/* Post-processing */}
           <EffectComposer>
             <Bloom
-              luminanceThreshold={0.8}
+              luminanceThreshold={1.0}
               luminanceSmoothing={0.3}
               intensity={1.2}
               mipmapBlur
