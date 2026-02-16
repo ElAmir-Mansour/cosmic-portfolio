@@ -13,6 +13,8 @@ interface PlanetModelProps {
   modelPath?: string;
   glowIntensity?: number;
   emissiveColor?: string;
+  eccentricity?: number;
+  axialTilt?: number;
 }
 
 const GLTFModel = ({ path, size }: { path: string; size: number }) => {
@@ -45,7 +47,6 @@ const SphereFallback = ({ color, size, glowIntensity = 1.5, emissiveColor }: { c
   );
 };
 
-/* Atmosphere rim-light shell using a simple transparent gradient approach */
 const Atmosphere = ({ color, size }: { color: string; size: number }) => {
   const atmosphereColor = useMemo(() => new THREE.Color(color), [color]);
   return (
@@ -62,18 +63,31 @@ const Atmosphere = ({ color, size }: { color: string; size: number }) => {
   );
 };
 
-const PlanetModel = ({ color, size, orbitRadius, orbitSpeed, onClick, name, modelPath, glowIntensity = 1.5, emissiveColor }: PlanetModelProps) => {
+const PlanetModel = ({
+  color, size, orbitRadius, orbitSpeed, onClick, name, modelPath,
+  glowIntensity = 1.5, emissiveColor, eccentricity = 0, axialTilt = 0,
+}: PlanetModelProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const groupRef = useRef<THREE.Group>(null);
+
+  // Convert axial tilt from degrees to radians
+  const tiltRad = useMemo(() => (axialTilt * Math.PI) / 180, [axialTilt]);
+  // Semi-minor axis for elliptical orbit: b = a * sqrt(1 - e^2)
+  const semiMinor = useMemo(() => orbitRadius * Math.sqrt(1 - eccentricity * eccentricity), [orbitRadius, eccentricity]);
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime() * orbitSpeed;
     if (groupRef.current) {
+      // Elliptical orbit: x = a*cos(t), z = b*sin(t)
       groupRef.current.position.x = Math.cos(t) * orbitRadius;
-      groupRef.current.position.z = Math.sin(t) * orbitRadius;
+      groupRef.current.position.z = Math.sin(t) * semiMinor;
+      // Apply orbital plane tilt
+      groupRef.current.position.y = Math.sin(t) * Math.sin(tiltRad) * orbitRadius * 0.1;
     }
     if (meshRef.current) {
       meshRef.current.rotation.y += 0.005;
+      // Axial tilt on the planet itself
+      meshRef.current.rotation.z = tiltRad;
     }
   });
 
@@ -100,7 +114,6 @@ const PlanetModel = ({ color, size, orbitRadius, orbitSpeed, onClick, name, mode
           )}
         </mesh>
 
-        {/* Atmosphere rim-light */}
         <Atmosphere color={emissiveColor || color} size={size} />
       </Float>
 

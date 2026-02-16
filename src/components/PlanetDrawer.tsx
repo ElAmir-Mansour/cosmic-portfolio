@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Play, Users, ExternalLink, BookOpen, Award } from "lucide-react";
 import type { Planet } from "@/services/DataService";
 import NLPSandbox from "./NLPSandbox";
+import ArchitectureDiagram from "./ArchitectureDiagram";
 
 interface PlanetDrawerProps {
   planet: Planet | null;
@@ -77,7 +78,6 @@ const ELearningCard = ({ project }: { project: Planet["projects"][0] }) => {
   return (
     <>
       <div className="rounded-lg overflow-hidden bg-secondary/50 border border-border transition-colors hover:border-primary/30">
-        {/* Thumbnail area */}
         <div className="relative h-32 bg-gradient-to-br from-accent to-secondary flex items-center justify-center">
           {project.videoUrl ? (
             <button
@@ -122,18 +122,20 @@ const ELearningCard = ({ project }: { project: Planet["projects"][0] }) => {
 };
 
 const DefaultProjectCard = ({ project }: { project: Planet["projects"][0] }) => (
-  <a
-    href={project.link}
-    className="block p-4 rounded-lg bg-secondary/50 border border-border transition-colors hover:border-primary/30"
-  >
-    <h4 className="font-medium text-foreground mb-1">{project.title}</h4>
-    <p className="text-sm text-muted-foreground mb-3">{project.description}</p>
-    <div className="flex flex-wrap gap-1.5">
-      {project.tags.map((tag) => (
-        <span key={tag} className="px-2 py-0.5 text-xs rounded bg-background text-muted-foreground">{tag}</span>
-      ))}
-    </div>
-  </a>
+  <div className="block p-4 rounded-lg bg-secondary/50 border border-border transition-colors hover:border-primary/30">
+    <a href={project.link} className="block">
+      <h4 className="font-medium text-foreground mb-1">{project.title}</h4>
+      <p className="text-sm text-muted-foreground mb-3">{project.description}</p>
+      <div className="flex flex-wrap gap-1.5">
+        {project.tags.map((tag) => (
+          <span key={tag} className="px-2 py-0.5 text-xs rounded bg-background text-muted-foreground">{tag}</span>
+        ))}
+      </div>
+    </a>
+    {project.architecture && (
+      <ArchitectureDiagram definition={project.architecture} title={`${project.title} Architecture`} />
+    )}
+  </div>
 );
 
 const PlanetDrawer = ({ planet, onClose }: PlanetDrawerProps) => {
@@ -171,10 +173,8 @@ const PlanetDrawer = ({ planet, onClose }: PlanetDrawerProps) => {
 
               <p className="text-muted-foreground text-sm mb-6">{planet.description}</p>
 
-              {/* Impact Stats for E-Learning */}
               {isELearning && <ImpactStats planet={planet} />}
 
-              {/* Skills */}
               <div className="mb-6">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Skills</h3>
                 <div className="flex flex-wrap gap-2">
@@ -184,7 +184,6 @@ const PlanetDrawer = ({ planet, onClose }: PlanetDrawerProps) => {
                 </div>
               </div>
 
-              {/* Projects / Course Modules */}
               <div>
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
                   {isELearning ? "Course Modules" : "Projects"}
@@ -200,7 +199,6 @@ const PlanetDrawer = ({ planet, onClose }: PlanetDrawerProps) => {
                 </div>
               </div>
 
-              {/* NLP Sandbox */}
               {isNLP && <NLPSandbox />}
             </div>
           </motion.aside>

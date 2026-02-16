@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Starfield from "@/components/Starfield";
@@ -6,9 +6,48 @@ import { getAllContent, saveContent, type ContentData, type Planet, type Project
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Download, Plus, Trash2, Lock, ChevronDown, ChevronUp, Save, Check } from "lucide-react";
+import { Download, Plus, Trash2, Lock, ChevronDown, ChevronUp, Save, Check, Eye } from "lucide-react";
+import { Canvas } from "@react-three/fiber";
+import * as THREE from "three";
 
 const ADMIN_PASSWORD = "admin";
+
+// Mini 3D planet preview for the admin theme editor
+const MiniPlanetPreview = ({ color, glowIntensity, emissiveColor }: { color: string; glowIntensity: number; emissiveColor: string }) => {
+  const emissive = useMemo(() => new THREE.Color(emissiveColor || color), [emissiveColor, color]);
+  const meshColor = useMemo(() => new THREE.Color(color), [color]);
+
+  return (
+    <div className="h-32 rounded-lg overflow-hidden border border-border bg-background">
+      <Canvas camera={{ position: [0, 0, 3], fov: 45 }}>
+        <ambientLight intensity={0.1} />
+        <pointLight position={[3, 3, 3]} intensity={1} />
+        <mesh rotation={[0.3, 0, 0]}>
+          <sphereGeometry args={[0.8, 32, 32]} />
+          <meshStandardMaterial
+            color={meshColor}
+            emissive={emissive}
+            emissiveIntensity={glowIntensity}
+            toneMapped={false}
+            roughness={0.3}
+            metalness={0.7}
+          />
+        </mesh>
+        {/* Atmosphere */}
+        <mesh scale={1.25}>
+          <sphereGeometry args={[0.8, 32, 32]} />
+          <meshBasicMaterial
+            color={emissive}
+            transparent
+            opacity={0.12}
+            side={THREE.BackSide}
+            depthWrite={false}
+          />
+        </mesh>
+      </Canvas>
+    </div>
+  );
+};
 
 const AdminPage = () => {
   const [authenticated, setAuthenticated] = useState(false);
@@ -18,7 +57,8 @@ const AdminPage = () => {
   const [expandedPlanet, setExpandedPlanet] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
-  const [newProject, setNewProject] = useState({ title: "", description: "", tags: "", link: "", videoUrl: "", studentCount: "" });
+  const [previewPlanet, setPreviewPlanet] = useState<string | null>(null);
+  const [newProject, setNewProject] = useState({ title: "", description: "", tags: "", link: "", videoUrl: "", studentCount: "", architecture: "" });
 
   useEffect(() => {
     getAllContent().then((data) => setContent(JSON.parse(JSON.stringify(data)))).catch(console.error);
@@ -80,13 +120,14 @@ const AdminPage = () => {
                   link: newProject.link || "#",
                   videoUrl: newProject.videoUrl || undefined,
                   studentCount: newProject.studentCount ? parseInt(newProject.studentCount) : undefined,
+                  architecture: newProject.architecture || undefined,
                 },
               ],
             }
           : p
       ),
     });
-    setNewProject({ title: "", description: "", tags: "", link: "", videoUrl: "", studentCount: "" });
+    setNewProject({ title: "", description: "", tags: "", link: "", videoUrl: "", studentCount: "", architecture: "" });
   };
 
   const removeProject = (planetId: string, projectId: string) => {
@@ -157,6 +198,10 @@ const AdminPage = () => {
               <Label className="text-muted-foreground">Title</Label>
               <Input value={content.profile.title} onChange={(e) => updateContent({ ...content, profile: { ...content.profile, title: e.target.value } })} className="mt-1" />
             </div>
+            <div className="md:col-span-2">
+              <Label className="text-muted-foreground">Tagline</Label>
+              <Input value={content.profile.tagline} onChange={(e) => updateContent({ ...content, profile: { ...content.profile, tagline: e.target.value } })} className="mt-1" />
+            </div>
           </div>
         </div>
 
@@ -164,6 +209,7 @@ const AdminPage = () => {
         <div className="space-y-6">
           {content.planets.map((planet) => {
             const isExpanded = expandedPlanet === planet.id;
+            const showPreview = previewPlanet === planet.id;
             return (
               <div key={planet.id} className="glass rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4 cursor-pointer" onClick={() => setExpandedPlanet(isExpanded ? null : planet.id)}>
@@ -177,7 +223,26 @@ const AdminPage = () => {
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                     {/* 3D Properties */}
                     <div className="p-4 rounded-lg bg-secondary/20 border border-border">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">3D Properties</h4>
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">3D Properties</h4>
+                        <button
+                          onClick={() => setPreviewPlanet(showPreview ? null : planet.id)}
+                          className="flex items-center gap-1 text-xs text-primary hover:underline"
+                        >
+                          <Eye className="w-3 h-3" /> {showPreview ? "Hide Preview" : "Preview"}
+                        </button>
+                      </div>
+
+                      {showPreview && (
+                        <div className="mb-4">
+                          <MiniPlanetPreview
+                            color={planet.color}
+                            glowIntensity={planet.glowIntensity ?? 1.5}
+                            emissiveColor={planet.emissiveColor || planet.color}
+                          />
+                        </div>
+                      )}
+
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div>
                           <Label className="text-xs text-muted-foreground">Model Path (.glb)</Label>
@@ -185,11 +250,52 @@ const AdminPage = () => {
                         </div>
                         <div>
                           <Label className="text-xs text-muted-foreground">Glow Intensity</Label>
-                          <Input type="number" step="0.1" value={planet.glowIntensity ?? 1.5} onChange={(e) => updatePlanet(planet.id, { glowIntensity: parseFloat(e.target.value) })} className="mt-1" />
+                          <input
+                            type="range"
+                            min="0" max="5" step="0.1"
+                            value={planet.glowIntensity ?? 1.5}
+                            onChange={(e) => updatePlanet(planet.id, { glowIntensity: parseFloat(e.target.value) })}
+                            className="w-full mt-2 accent-primary"
+                          />
+                          <span className="text-xs text-muted-foreground font-mono">{(planet.glowIntensity ?? 1.5).toFixed(1)}</span>
                         </div>
                         <div>
                           <Label className="text-xs text-muted-foreground">Emissive Color</Label>
-                          <Input value={planet.emissiveColor || planet.color} onChange={(e) => updatePlanet(planet.id, { emissiveColor: e.target.value })} className="mt-1" placeholder="#FF6600" />
+                          <div className="flex gap-2 mt-1">
+                            <input
+                              type="color"
+                              value={planet.emissiveColor || planet.color}
+                              onChange={(e) => updatePlanet(planet.id, { emissiveColor: e.target.value })}
+                              className="w-10 h-10 rounded border border-border cursor-pointer"
+                            />
+                            <Input value={planet.emissiveColor || planet.color} onChange={(e) => updatePlanet(planet.id, { emissiveColor: e.target.value })} placeholder="#FF6600" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Orbital Physics */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 pt-3 border-t border-border/50">
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Eccentricity (0 = circle, 0.5 = ellipse)</Label>
+                          <input
+                            type="range"
+                            min="0" max="0.6" step="0.05"
+                            value={planet.eccentricity ?? 0}
+                            onChange={(e) => updatePlanet(planet.id, { eccentricity: parseFloat(e.target.value) })}
+                            className="w-full mt-2 accent-primary"
+                          />
+                          <span className="text-xs text-muted-foreground font-mono">{(planet.eccentricity ?? 0).toFixed(2)}</span>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Axial Tilt (degrees)</Label>
+                          <input
+                            type="range"
+                            min="0" max="45" step="1"
+                            value={planet.axialTilt ?? 0}
+                            onChange={(e) => updatePlanet(planet.id, { axialTilt: parseFloat(e.target.value) })}
+                            className="w-full mt-2 accent-primary"
+                          />
+                          <span className="text-xs text-muted-foreground font-mono">{planet.axialTilt ?? 0}°</span>
                         </div>
                       </div>
                     </div>
@@ -203,6 +309,7 @@ const AdminPage = () => {
                             <span className="ml-2 text-xs text-muted-foreground">{project.tags.join(", ")}</span>
                             {project.videoUrl && <span className="ml-2 text-xs text-primary">🎬 Video</span>}
                             {project.studentCount && <span className="ml-2 text-xs text-muted-foreground">👥 {project.studentCount}</span>}
+                            {project.architecture && <span className="ml-2 text-xs text-primary">📐 Diagram</span>}
                           </div>
                           <button onClick={() => removeProject(planet.id, project.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors">
                             <Trash2 className="w-4 h-4" />
@@ -220,6 +327,7 @@ const AdminPage = () => {
                         <Input placeholder="Link" value={newProject.link} onChange={(e) => setNewProject({ ...newProject, link: e.target.value })} />
                         <Input placeholder="Video URL (optional)" value={newProject.videoUrl} onChange={(e) => setNewProject({ ...newProject, videoUrl: e.target.value })} />
                         <Input placeholder="Student count (optional)" type="number" value={newProject.studentCount} onChange={(e) => setNewProject({ ...newProject, studentCount: e.target.value })} />
+                        <Input placeholder="Architecture diagram (Mermaid syntax, optional)" value={newProject.architecture} onChange={(e) => setNewProject({ ...newProject, architecture: e.target.value })} />
                         <div className="flex gap-2">
                           <Button size="sm" onClick={() => addProject(planet.id)}>Add</Button>
                           <Button size="sm" variant="ghost" onClick={() => setEditingPlanet(null)}>Cancel</Button>
