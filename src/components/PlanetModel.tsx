@@ -45,49 +45,16 @@ const SphereFallback = ({ color, size, glowIntensity = 1.5, emissiveColor }: { c
   );
 };
 
-/* Atmosphere rim-light shell */
+/* Atmosphere rim-light shell using a simple transparent gradient approach */
 const Atmosphere = ({ color, size }: { color: string; size: number }) => {
-  const materialRef = useRef<THREE.ShaderMaterial>(null);
-
-  const shaderData = useMemo(() => {
-    const c = new THREE.Color(color);
-    return {
-      uniforms: {
-        glowColor: { value: c },
-        coeff: { value: 0.8 },
-        power: { value: 3.0 },
-      },
-      vertexShader: `
-        varying vec3 vNormal;
-        varying vec3 vPositionNormal;
-        void main() {
-          vNormal = normalize(normalMatrix * normal);
-          vPositionNormal = normalize((modelViewMatrix * vec4(position, 1.0)).xyz);
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform vec3 glowColor;
-        uniform float coeff;
-        uniform float power;
-        varying vec3 vNormal;
-        varying vec3 vPositionNormal;
-        void main() {
-          float intensity = pow(coeff - dot(vNormal, vPositionNormal), power);
-          gl_FragColor = vec4(glowColor, intensity * 0.6);
-        }
-      `,
-    };
-  }, [color]);
-
+  const atmosphereColor = useMemo(() => new THREE.Color(color), [color]);
   return (
-    <mesh scale={1.2}>
+    <mesh scale={1.25}>
       <sphereGeometry args={[size, 32, 32]} />
-      <shaderMaterial
-        ref={materialRef}
-        attach="material"
-        args={[shaderData]}
+      <meshBasicMaterial
+        color={atmosphereColor}
         transparent
+        opacity={0.12}
         side={THREE.BackSide}
         depthWrite={false}
       />
@@ -117,7 +84,7 @@ const PlanetModel = ({ color, size, orbitRadius, orbitSpeed, onClick, name, mode
 
   return (
     <group ref={groupRef}>
-      <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.3}>
+      <Float speed={1.2} rotationIntensity={0.1} floatIntensity={0.2} floatingRange={[-0.1, 0.1]}>
         <mesh
           ref={meshRef}
           onClick={handleClick}
