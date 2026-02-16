@@ -6,7 +6,7 @@ import { getAllContent, type ContentData, type Planet, type Project } from "@/se
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Download, Plus, Trash2, Lock, ChevronDown, ChevronUp } from "lucide-react";
+import { Download, Plus, Trash2, Lock, ChevronDown, ChevronUp, Save, Check } from "lucide-react";
 
 const ADMIN_PASSWORD = "admin";
 
@@ -16,6 +16,8 @@ const AdminPage = () => {
   const [content, setContent] = useState<ContentData | null>(null);
   const [editingPlanet, setEditingPlanet] = useState<string | null>(null);
   const [expandedPlanet, setExpandedPlanet] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
   const [newProject, setNewProject] = useState({ title: "", description: "", tags: "", link: "", videoUrl: "", studentCount: "" });
 
   useEffect(() => {
@@ -27,12 +29,26 @@ const AdminPage = () => {
     if (password === ADMIN_PASSWORD) setAuthenticated(true);
   };
 
+  const updateContent = (newContent: ContentData) => {
+    setContent(newContent);
+    setHasChanges(true);
+    setSaved(false);
+  };
+
   const updatePlanet = (planetId: string, updates: Partial<Planet>) => {
     if (!content) return;
-    setContent({
+    updateContent({
       ...content,
       planets: content.planets.map((p) => (p.id === planetId ? { ...p, ...updates } : p)),
     });
+  };
+
+  const saveChanges = () => {
+    if (!content) return;
+    localStorage.setItem("portfolio-content", JSON.stringify(content));
+    setSaved(true);
+    setHasChanges(false);
+    setTimeout(() => setSaved(false), 2000);
   };
 
   const exportJSON = () => {
@@ -48,7 +64,7 @@ const AdminPage = () => {
 
   const addProject = (planetId: string) => {
     if (!content || !newProject.title) return;
-    setContent({
+    updateContent({
       ...content,
       planets: content.planets.map((p) =>
         p.id === planetId
@@ -75,7 +91,7 @@ const AdminPage = () => {
 
   const removeProject = (planetId: string, projectId: string) => {
     if (!content) return;
-    setContent({
+    updateContent({
       ...content,
       planets: content.planets.map((p) =>
         p.id === planetId ? { ...p, projects: p.projects.filter((pr) => pr.id !== projectId) } : p
@@ -119,9 +135,14 @@ const AdminPage = () => {
       <div className="container mx-auto pt-24 pb-16 px-6 relative z-10">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <Button onClick={exportJSON} variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" /> Export JSON
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button onClick={saveChanges} size="sm" disabled={!hasChanges && !saved}>
+              {saved ? <><Check className="w-4 h-4 mr-2" /> Saved</> : <><Save className="w-4 h-4 mr-2" /> Save Changes</>}
+            </Button>
+            <Button onClick={exportJSON} variant="outline" size="sm">
+              <Download className="w-4 h-4 mr-2" /> Export JSON
+            </Button>
+          </div>
         </div>
 
         {/* Profile */}
@@ -130,11 +151,11 @@ const AdminPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label className="text-muted-foreground">Name</Label>
-              <Input value={content.profile.name} onChange={(e) => setContent({ ...content, profile: { ...content.profile, name: e.target.value } })} className="mt-1" />
+              <Input value={content.profile.name} onChange={(e) => updateContent({ ...content, profile: { ...content.profile, name: e.target.value } })} className="mt-1" />
             </div>
             <div>
               <Label className="text-muted-foreground">Title</Label>
-              <Input value={content.profile.title} onChange={(e) => setContent({ ...content, profile: { ...content.profile, title: e.target.value } })} className="mt-1" />
+              <Input value={content.profile.title} onChange={(e) => updateContent({ ...content, profile: { ...content.profile, title: e.target.value } })} className="mt-1" />
             </div>
           </div>
         </div>
