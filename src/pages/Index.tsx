@@ -92,7 +92,7 @@ const Index = () => {
             className="sticky top-0 h-screen z-20"
             id="explore"
           >
-            <GalaxyScene planets={content.planets} onPlanetClick={setSelectedPlanet} />
+            <GalaxyScene planets={content.planets} onPlanetClick={setSelectedPlanet} selectedPlanet={selectedPlanet} />
           </motion.div>
         )}
       </div>
