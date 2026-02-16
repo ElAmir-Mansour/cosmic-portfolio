@@ -1,5 +1,5 @@
 import { Suspense, useState, useCallback, useRef, useEffect, createContext, useContext } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Stars, useProgress } from "@react-three/drei";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
@@ -7,9 +7,9 @@ import PlanetModel from "./PlanetModel";
 import CameraController from "./CameraController";
 import type { Planet } from "@/services/DataService";
 
-// Low power context
-const LowPowerContext = createContext(false);
-export const useLowPower = () => useContext(LowPowerContext);
+// Performance tier: "high" | "medium" | "low"
+type PerfTier = "high" | "medium" | "low";
+const PerfContext = createContext<PerfTier>("high");
 
 interface GalaxySceneProps {
   planets: Planet[];
@@ -30,13 +30,65 @@ const Sun = () => (
   </mesh>
 );
 
+// Auto-detect FPS and report tier changes
+const FPSMonitor = ({ onTierChange }: { onTierChange: (tier: PerfTier) => void }) => {
+  const frames = useRef(0);
+  const lastTime = useRef(performance.now());
+  const stableCount = useRef(0);
+  const currentTier = useRef<PerfTier>("high");
+
+  useFrame(() => {
+    frames.current++;
+    const now = performance.now();
+    const delta = now - lastTime.current;
+    if (delta >= 2000) {
+      const fps = (frames.current / delta) * 1000;
+      frames.current = 0;
+      lastTime.current = now;
+
+      let newTier: PerfTier = "high";
+      if (fps < 20) newTier = "low";
+      else if (fps < 40) newTier = "medium";
+
+      if (newTier !== currentTier.current) {
+        stableCount.current++;
+        if (stableCount.current >= 2) {
+          currentTier.current = newTier;
+          onTierChange(newTier);
+          stableCount.current = 0;
+        }
+      } else {
+        stableCount.current = 0;
+      }
+    }
+  });
+
+  return null;
+};
+
+// Adjust DPR based on tier
+const DPRController = () => {
+  const tier = useContext(PerfContext);
+  const { gl } = useThree();
+  useEffect(() => {
+    const dpr = tier === "high" ? Math.min(window.devicePixelRatio, 2) : tier === "medium" ? 1.5 : 1;
+    gl.setPixelRatio(dpr);
+  }, [tier, gl]);
+  return null;
+};
+
 const PostEffects = () => {
-  const lowPower = useContext(LowPowerContext);
-  if (lowPower) return null;
+  const tier = useContext(PerfContext);
+  if (tier === "low") return null;
   return (
     <EffectComposer>
-      <Bloom luminanceThreshold={1.0} luminanceSmoothing={0.3} intensity={1.5} mipmapBlur />
-      <Vignette offset={0.3} darkness={0.7} />
+      <Bloom
+        luminanceThreshold={1.0}
+        luminanceSmoothing={0.3}
+        intensity={tier === "high" ? 1.5 : 0.8}
+        mipmapBlur
+      />
+      <Vignette offset={0.3} darkness={tier === "high" ? 0.7 : 0.4} />
     </EffectComposer>
   );
 };
@@ -47,7 +99,6 @@ const LoadingBar = () => {
   const [displayProgress, setDisplayProgress] = useState(0);
 
   useEffect(() => {
-    // If no assets to load, simulate a quick ramp-up then hide
     if (!active && progress === 0) {
       let p = 0;
       const interval = setInterval(() => {
@@ -60,7 +111,6 @@ const LoadingBar = () => {
       }, 80);
       return () => clearInterval(interval);
     }
-    // Real asset loading
     setDisplayProgress(progress);
     if (!active && progress >= 100) {
       setTimeout(() => setVisible(false), 300);
@@ -81,10 +131,22 @@ const LoadingBar = () => {
   );
 };
 
+const TIER_LABELS: Record<PerfTier, string> = {
+  high: "✦ High",
+  medium: "◈ Medium",
+  low: "⚡ Low",
+};
+
+const STAR_COUNTS: Record<PerfTier, number> = {
+  high: 3000,
+  medium: 1500,
+  low: 500,
+};
+
 const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet }: GalaxySceneProps) => {
   const [followRef, setFollowRef] = useState<React.RefObject<THREE.Group> | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [lowPower, setLowPower] = useState(false);
+  const [perfTier, setPerfTier] = useState<PerfTier>("high");
   const controlsRef = useRef<any>(null);
 
   useEffect(() => {
@@ -112,16 +174,24 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet }: GalaxySceneProp
     onPlanetClick(null as any);
   }, [onPlanetClick]);
 
+  const cycleTier = useCallback(() => {
+    setPerfTier((prev) => prev === "high" ? "medium" : prev === "medium" ? "low" : "high");
+  }, []);
+
+  const starCount = STAR_COUNTS[perfTier];
+
   return (
-    <LowPowerContext.Provider value={lowPower}>
+    <PerfContext.Provider value={perfTier}>
       <div className="w-full h-full relative">
         <Canvas
           camera={{ position: [0, 12, 20], fov: 50 }}
           style={{ background: "hsl(230, 25%, 4%)" }}
         >
           <Suspense fallback={null}>
+            <FPSMonitor onTierChange={setPerfTier} />
+            <DPRController />
             <ambientLight intensity={0.1} />
-            <Stars radius={100} depth={60} count={3000} factor={3} saturation={0} fade speed={0.5} />
+            <Stars radius={100} depth={60} count={starCount} factor={3} saturation={0} fade speed={0.5} />
             <Sun />
             {planets.map((planet) => (
               <PlanetModel
@@ -134,16 +204,22 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet }: GalaxySceneProp
                 modelPath={planet.modelPath}
                 glowIntensity={planet.glowIntensity}
                 emissiveColor={planet.emissiveColor}
+                eccentricity={planet.eccentricity}
+                axialTilt={planet.axialTilt}
                 onClick={(ref) => handlePlanetClick(planet, ref)}
               />
             ))}
-            {/* Orbit rings */}
-            {planets.map((planet) => (
-              <mesh key={`orbit-${planet.id}`} rotation={[-Math.PI / 2, 0, 0]}>
-                <ringGeometry args={[planet.orbitRadius - 0.02, planet.orbitRadius + 0.02, 128]} />
-                <meshBasicMaterial color="#ffffff" transparent opacity={0.06} side={2} />
-              </mesh>
-            ))}
+            {/* Elliptical orbit rings */}
+            {planets.map((planet) => {
+              const ecc = planet.eccentricity || 0;
+              const semiMinor = planet.orbitRadius * Math.sqrt(1 - ecc * ecc);
+              return (
+                <mesh key={`orbit-${planet.id}`} rotation={[-Math.PI / 2, 0, 0]} scale={[1, semiMinor / planet.orbitRadius, 1]}>
+                  <ringGeometry args={[planet.orbitRadius - 0.02, planet.orbitRadius + 0.02, 128]} />
+                  <meshBasicMaterial color="#ffffff" transparent opacity={0.06} side={2} />
+                </mesh>
+              );
+            })}
             <CameraController targetRef={followRef} />
             <OrbitControls
               ref={controlsRef}
@@ -166,16 +242,16 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet }: GalaxySceneProp
             ← Galaxy View
           </button>
         )}
-        {/* Low Power Toggle */}
+        {/* Performance Tier Toggle */}
         <button
-          onClick={() => setLowPower(!lowPower)}
+          onClick={cycleTier}
           className="absolute bottom-4 right-4 z-30 px-3 py-1.5 text-xs font-medium rounded-md glass text-muted-foreground hover:text-foreground transition-colors"
-          title={lowPower ? "Effects off" : "Effects on"}
+          title={`Performance: ${perfTier}`}
         >
-          {lowPower ? "⚡ Low Power" : "✦ Full FX"}
+          {TIER_LABELS[perfTier]}
         </button>
       </div>
-    </LowPowerContext.Provider>
+    </PerfContext.Provider>
   );
 };
 

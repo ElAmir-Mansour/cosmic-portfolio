@@ -16,6 +16,8 @@
       "orbitRadius": 4,
       "orbitSpeed": 0.3,
       "size": 0.5,
+      "eccentricity": 0.15,
+      "axialTilt": 12,
       "description": "Native iOS applications built with Swift and SwiftUI. Clean architecture, smooth animations, and pixel-perfect interfaces.",
       "skills": ["Swift", "SwiftUI", "UIKit", "CoreData", "Combine"],
       "projects": [
@@ -24,7 +26,8 @@
           "title": "Fitness Tracker Pro",
           "description": "A health and fitness app with real-time workout tracking, custom routines, and HealthKit integration.",
           "tags": ["Swift", "SwiftUI", "HealthKit"],
-          "link": "#"
+          "link": "#",
+          "architecture": "graph TD\nA[SwiftUI Views] --> B[ViewModel]\nB --> C[HealthKit API]\nB --> D[CoreData]\nC --> E[Health Store]\nD --> F[Local Cache]"
         },
         {
           "id": "ios-2",
@@ -43,6 +46,8 @@
       "orbitRadius": 6,
       "orbitSpeed": 0.2,
       "size": 0.6,
+      "eccentricity": 0.25,
+      "axialTilt": 8,
       "description": "End-to-end web applications. From databases to deployment, every layer built with purpose.",
       "skills": ["React", "TypeScript", "Go", "Python", "PostgreSQL", "Docker"],
       "projects": [
@@ -51,14 +56,16 @@
           "title": "E-Commerce Platform",
           "description": "A scalable marketplace with real-time inventory, payment processing, and analytics dashboard.",
           "tags": ["React", "Go", "PostgreSQL"],
-          "link": "#"
+          "link": "#",
+          "architecture": "graph TD\nA[React Frontend] -->|REST API| B[Go Backend]\nB --> C[PostgreSQL]\nB --> D[Redis Cache]\nA --> E[Stripe SDK]\nB -->|Webhooks| E[Stripe]"
         },
         {
           "id": "fs-2",
           "title": "DevOps Dashboard",
           "description": "Centralized monitoring tool for CI/CD pipelines, container health, and deployment metrics.",
           "tags": ["TypeScript", "Docker", "Redis"],
-          "link": "#"
+          "link": "#",
+          "architecture": "graph TD\nA[Dashboard UI] --> B[WebSocket Server]\nB --> C[Docker API]\nB --> D[CI/CD Hooks]\nC --> E[Container Metrics]\nD --> F[Build Logs]"
         }
       ]
     },
@@ -70,6 +77,8 @@
       "orbitRadius": 8,
       "orbitSpeed": 0.15,
       "size": 0.45,
+      "eccentricity": 0.1,
+      "axialTilt": 5,
       "description": "Educational platforms and content systems that make complex topics accessible and engaging. Over a decade of teaching experience through 'Learn With ElAmir.'",
       "skills": ["LMS Design", "Video Production", "Curriculum Design", "Technical Writing"],
       "projects": [
@@ -97,6 +106,8 @@
       "orbitRadius": 10,
       "orbitSpeed": 0.1,
       "size": 0.55,
+      "eccentricity": 0.3,
+      "axialTilt": 20,
       "description": "Natural Language Processing research focused on mental health applications. Using transformer models and linguistic analysis to detect early signs of depression from text data.",
       "skills": ["Python", "PyTorch", "Transformers", "spaCy", "NLTK"],
       "projects": [
@@ -105,7 +116,8 @@
           "title": "Sentiment Analysis Engine",
           "description": "Real-time sentiment classifier for social media streams with multilingual support.",
           "tags": ["Python", "Transformers", "FastAPI"],
-          "link": "#"
+          "link": "#",
+          "architecture": "graph TD\nA[Text Input] --> B[Tokenizer]\nB --> C[BERT Encoder]\nC --> D[Attention Layers]\nD --> E[Classification Head]\nE --> F[Sentiment Score]"
         },
         {
           "id": "nlp-2",
@@ -124,6 +136,8 @@
       "orbitRadius": 12,
       "orbitSpeed": 0.08,
       "size": 0.4,
+      "eccentricity": 0.05,
+      "axialTilt": 3,
       "description": "Agile project management and team leadership. Shipping products on time without burning out the team.",
       "skills": ["Scrum", "Kanban", "Jira", "Confluence", "Stakeholder Management"],
       "projects": [
@@ -139,7 +153,8 @@
           "title": "Product Roadmap Tool",
           "description": "Internal tool for visual roadmap planning with dependency tracking and capacity forecasting.",
           "tags": ["React", "D3.js", "PostgreSQL"],
-          "link": "#"
+          "link": "#",
+          "architecture": "graph TD\nA[Roadmap UI] --> B[D3.js Renderer]\nA --> C[API Layer]\nC --> D[PostgreSQL]\nC --> E[Auth Service]\nD --> F[Dependency Graph]"
         }
       ]
     }

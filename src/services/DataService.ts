@@ -11,6 +11,7 @@ export interface Project {
   link: string;
   videoUrl?: string;
   studentCount?: number;
+  architecture?: string; // Mermaid diagram definition
 }
 
 export interface Planet {
@@ -27,6 +28,8 @@ export interface Planet {
   modelPath?: string;
   glowIntensity?: number;
   emissiveColor?: string;
+  eccentricity?: number;  // 0 = circle, 0.5 = ellipse
+  axialTilt?: number;     // degrees
 }
 
 export interface Profile {
@@ -47,7 +50,6 @@ let cachedData: ContentData | null = null;
 
 async function fetchContent(): Promise<ContentData> {
   if (cachedData) return cachedData;
-  // Check localStorage for saved admin changes first
   const saved = localStorage.getItem("portfolio-content");
   if (saved) {
     cachedData = JSON.parse(saved);
