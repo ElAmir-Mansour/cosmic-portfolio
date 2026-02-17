@@ -81,6 +81,9 @@ export interface Profile {
   email: string;
   github: string;
   linkedin: string;
+  medium?: string;
+  udemy?: string;
+  youtube?: string;
 }
 
 export interface ContentData {
