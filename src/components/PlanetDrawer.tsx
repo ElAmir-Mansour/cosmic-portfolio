@@ -106,7 +106,7 @@ const DefaultProjectCard = ({ project }: { project: Planet["projects"][0] }) => 
       </div>
     </a>
     {project.architecture && (
-      <ArchitectureDiagram definition={project.architecture} title={`${project.title} Architecture`} />
+      <ArchitectureDiagram definition={project.architecture} title={`${project.title} Architecture`} codeSnippets={project.codeSnippets} />
     )}
     <TechnicalXRay challenges={project.technicalChallenges} />
   </div>
