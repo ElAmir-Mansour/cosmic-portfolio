@@ -43,7 +43,14 @@ const Navbar = () => {
           {item.path.startsWith("/#") ? (
             <a
               href={item.path}
-              onClick={() => setMobileOpen(false)}
+              onClick={(e) => {
+                e.preventDefault();
+                setMobileOpen(false);
+                const id = item.path.replace("/#", "");
+                const el = document.getElementById(id);
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+                else window.location.hash = id;
+              }}
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               {item.label}
