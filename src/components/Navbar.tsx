@@ -1,23 +1,30 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Linkedin, Youtube, BookOpen, GraduationCap, Github } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Linkedin, Youtube, BookOpen, GraduationCap, Github, Menu, X } from "lucide-react";
 import { getProfile, type Profile } from "@/services/DataService";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const navItems = [
   { label: "Home", path: "/" },
   { label: "Explore", path: "/#explore" },
   { label: "Contact", path: "/#contact" },
-  { label: "Admin", path: "/admin" },
 ];
 
 const Navbar = () => {
   const location = useLocation();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     getProfile().then(setProfile).catch(console.error);
   }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location]);
 
   const socials = profile
     ? [
@@ -28,6 +35,50 @@ const Navbar = () => {
         { href: profile.udemy, icon: GraduationCap, show: !!profile.udemy },
       ].filter((s) => s.show)
     : [];
+
+  const NavItems = () => (
+    <>
+      {navItems.map((item) => (
+        <li key={item.path}>
+          {item.path.startsWith("/#") ? (
+            <a
+              href={item.path}
+              onClick={() => setMobileOpen(false)}
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {item.label}
+            </a>
+          ) : (
+            <Link
+              to={item.path}
+              onClick={() => setMobileOpen(false)}
+              className={`text-sm transition-colors hover:text-foreground ${
+                location.pathname === item.path ? "text-foreground" : "text-muted-foreground"
+              }`}
+            >
+              {item.label}
+            </Link>
+          )}
+        </li>
+      ))}
+    </>
+  );
+
+  const SocialIcons = () => (
+    <>
+      {socials.map((s, i) => (
+        <a
+          key={i}
+          href={s.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-1.5 rounded-md text-muted-foreground transition-all duration-300 hover:text-primary hover:shadow-[0_0_12px_hsla(var(--primary)/0.4)]"
+        >
+          <s.icon className="w-4 h-4" />
+        </a>
+      ))}
+    </>
+  );
 
   return (
     <motion.nav
@@ -40,49 +91,52 @@ const Navbar = () => {
         <Link to="/" className="text-lg font-semibold tracking-tight text-foreground">
           <span className="text-primary">◆</span> CKB
         </Link>
-        <div className="flex items-center gap-6">
+
+        {/* Desktop nav */}
+        <div className="hidden md:flex items-center gap-6">
           <ul className="flex items-center gap-6">
-            {navItems.map((item) => (
-              <li key={item.path}>
-                {item.path.startsWith("/#") ? (
-                  <a
-                    href={item.path}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {item.label}
-                  </a>
-                ) : (
-                  <Link
-                    to={item.path}
-                    className={`text-sm transition-colors hover:text-foreground ${
-                      location.pathname === item.path
-                        ? "text-foreground"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                )}
-              </li>
-            ))}
+            <NavItems />
           </ul>
           {socials.length > 0 && (
             <div className="flex items-center gap-2 border-l border-border pl-4">
-              {socials.map((s, i) => (
-                <a
-                  key={i}
-                  href={s.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1.5 rounded-md text-muted-foreground transition-all duration-300 hover:text-primary hover:shadow-[0_0_12px_hsla(var(--primary)/0.4)]"
-                >
-                  <s.icon className="w-4 h-4" />
-                </a>
-              ))}
+              <SocialIcons />
             </div>
           )}
         </div>
+
+        {/* Mobile hamburger */}
+        <button
+          className="md:hidden p-2 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+          onClick={() => setMobileOpen((prev) => !prev)}
+          aria-label="Toggle menu"
+        >
+          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
       </div>
+
+      {/* Mobile menu */}
+      <AnimatePresence>
+        {mobileOpen && isMobile && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden md:hidden border-t border-border"
+          >
+            <div className="px-6 py-4 space-y-4">
+              <ul className="space-y-3">
+                <NavItems />
+              </ul>
+              {socials.length > 0 && (
+                <div className="flex items-center gap-2 pt-3 border-t border-border">
+                  <SocialIcons />
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.nav>
   );
 };
