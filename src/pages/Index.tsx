@@ -56,9 +56,10 @@ const Index = () => {
     offset: ["start start", "end start"],
   });
 
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.4], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.4], [1, 0.95]);
-  const galaxyOpacity = useTransform(scrollYProgress, [0.3, 0.6], [0, 1]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.25], [1, 0.95]);
+  const heroVisible = useTransform(scrollYProgress, (v) => v > 0.3 ? "none" : "auto");
+  const galaxyOpacity = useTransform(scrollYProgress, [0.2, 0.4], [0, 1]);
 
   useEffect(() => {
     getAllContent().then(setContent).catch(console.error);
@@ -103,7 +104,7 @@ const Index = () => {
       {/* Hero Section */}
       <div ref={containerRef} className="relative" style={{ height: isMobile ? "auto" : "200vh" }}>
         <motion.section
-          style={isMobile ? {} : { opacity: heroOpacity, scale: heroScale }}
+          style={isMobile ? {} : { opacity: heroOpacity, scale: heroScale, pointerEvents: heroVisible }}
           className="sticky top-0 flex items-center justify-center min-h-screen z-10 px-6"
         >
           <div className="text-center max-w-2xl">
