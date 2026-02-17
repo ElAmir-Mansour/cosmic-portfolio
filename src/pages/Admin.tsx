@@ -498,6 +498,30 @@ const AdminPage = () => {
               <Label className="text-muted-foreground">Tagline</Label>
               <Input value={content.profile.tagline} onChange={(e) => updateContent({ ...content, profile: { ...content.profile, tagline: e.target.value } })} className="mt-1" />
             </div>
+            <div>
+              <Label className="text-muted-foreground">Email</Label>
+              <Input value={content.profile.email} onChange={(e) => updateContent({ ...content, profile: { ...content.profile, email: e.target.value } })} className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-muted-foreground">GitHub</Label>
+              <Input value={content.profile.github} onChange={(e) => updateContent({ ...content, profile: { ...content.profile, github: e.target.value } })} className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-muted-foreground">LinkedIn</Label>
+              <Input value={content.profile.linkedin} onChange={(e) => updateContent({ ...content, profile: { ...content.profile, linkedin: e.target.value } })} className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Medium</Label>
+              <Input value={content.profile.medium || ""} onChange={(e) => updateContent({ ...content, profile: { ...content.profile, medium: e.target.value || undefined } })} className="mt-1" placeholder="https://medium.com/@..." />
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Udemy</Label>
+              <Input value={content.profile.udemy || ""} onChange={(e) => updateContent({ ...content, profile: { ...content.profile, udemy: e.target.value || undefined } })} className="mt-1" placeholder="https://www.udemy.com/user/..." />
+            </div>
+            <div>
+              <Label className="text-muted-foreground">YouTube</Label>
+              <Input value={content.profile.youtube || ""} onChange={(e) => updateContent({ ...content, profile: { ...content.profile, youtube: e.target.value || undefined } })} className="mt-1" placeholder="https://www.youtube.com/@..." />
+            </div>
           </div>
         </div>
 

@@ -1,5 +1,8 @@
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Linkedin, Youtube, BookOpen, GraduationCap, Github } from "lucide-react";
+import { getProfile, type Profile } from "@/services/DataService";
 
 const navItems = [
   { label: "Home", path: "/" },
@@ -10,6 +13,21 @@ const navItems = [
 
 const Navbar = () => {
   const location = useLocation();
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    getProfile().then(setProfile).catch(console.error);
+  }, []);
+
+  const socials = profile
+    ? [
+        { href: profile.linkedin, icon: Linkedin, show: true },
+        { href: profile.github, icon: Github, show: true },
+        { href: profile.youtube, icon: Youtube, show: !!profile.youtube },
+        { href: profile.medium, icon: BookOpen, show: !!profile.medium },
+        { href: profile.udemy, icon: GraduationCap, show: !!profile.udemy },
+      ].filter((s) => s.show)
+    : [];
 
   return (
     <motion.nav
@@ -22,31 +40,48 @@ const Navbar = () => {
         <Link to="/" className="text-lg font-semibold tracking-tight text-foreground">
           <span className="text-primary">◆</span> CKB
         </Link>
-        <ul className="flex items-center gap-6">
-          {navItems.map((item) => (
-            <li key={item.path}>
-              {item.path.startsWith("/#") ? (
+        <div className="flex items-center gap-6">
+          <ul className="flex items-center gap-6">
+            {navItems.map((item) => (
+              <li key={item.path}>
+                {item.path.startsWith("/#") ? (
+                  <a
+                    href={item.path}
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {item.label}
+                  </a>
+                ) : (
+                  <Link
+                    to={item.path}
+                    className={`text-sm transition-colors hover:text-foreground ${
+                      location.pathname === item.path
+                        ? "text-foreground"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
+          {socials.length > 0 && (
+            <div className="flex items-center gap-2 border-l border-border pl-4">
+              {socials.map((s, i) => (
                 <a
-                  href={item.path}
-                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  key={i}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1.5 rounded-md text-muted-foreground transition-all duration-300 hover:text-primary hover:shadow-[0_0_12px_hsla(var(--primary)/0.4)]"
                 >
-                  {item.label}
+                  <s.icon className="w-4 h-4" />
                 </a>
-              ) : (
-                <Link
-                  to={item.path}
-                  className={`text-sm transition-colors hover:text-foreground ${
-                    location.pathname === item.path
-                      ? "text-foreground"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              )}
-            </li>
-          ))}
-        </ul>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </motion.nav>
   );
