@@ -173,7 +173,7 @@ const Index = () => {
         {!isMobile && (
           <motion.div
             style={{ opacity: galaxyOpacity }}
-            className="sticky top-0 h-screen z-20"
+            className="sticky top-0 h-screen z-20 bg-background"
             id="explore"
           >
             <Suspense fallback={<GalaxyLoader />}>

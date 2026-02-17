@@ -522,6 +522,21 @@ const AdminPage = () => {
               <Label className="text-muted-foreground">YouTube</Label>
               <Input value={content.profile.youtube || ""} onChange={(e) => updateContent({ ...content, profile: { ...content.profile, youtube: e.target.value || undefined } })} className="mt-1" placeholder="https://www.youtube.com/@..." />
             </div>
+            <div className="md:col-span-2">
+              <Label className="text-muted-foreground">About</Label>
+              <textarea
+                value={content.profile.about || ""}
+                onChange={(e) => updateContent({ ...content, profile: { ...content.profile, about: e.target.value || undefined } })}
+                className="mt-1 w-full px-3 py-2 rounded-md border border-input bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-y"
+                rows={3}
+                placeholder="A short bio about yourself..."
+              />
+            </div>
+            <div className="md:col-span-2">
+              <Label className="text-muted-foreground">Resume URL</Label>
+              <Input value={content.profile.resumeUrl || ""} onChange={(e) => updateContent({ ...content, profile: { ...content.profile, resumeUrl: e.target.value || undefined } })} className="mt-1" placeholder="https://drive.google.com/... or /resume.pdf" />
+              <p className="text-[10px] text-muted-foreground mt-1">Link to your resume PDF (Google Drive, Dropbox, or place a file in /public)</p>
+            </div>
           </div>
         </div>
 
