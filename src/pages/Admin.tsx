@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Starfield from "@/components/Starfield";
-import { getAllContent, saveContent, type ContentData, type Planet, type Project, type ResearchMilestone, type ImpactMetric, type LearningPath, type TechnicalChallenge } from "@/services/DataService";
+import { getAllContent, saveContent, type ContentData, type Planet, type Project, type ResearchMilestone, type ImpactMetric, type LearningPath, type TechnicalChallenge, type CodeSnippet } from "@/services/DataService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -251,6 +251,82 @@ const ChallengesEditor = ({ challenges, onChange }: { challenges: TechnicalChall
         </div>
       ) : (
         <button onClick={() => setAdding(true)} className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"><Plus className="w-3 h-3" /> Add decision</button>
+      )}
+    </div>
+  );
+};
+
+/* ─── Code Snippets Editor (per project) ─── */
+const CodeSnippetsEditor = ({ snippets, onChange }: { snippets: CodeSnippet[]; onChange: (s: CodeSnippet[]) => void }) => {
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState({ nodeId: "", language: "typescript", filename: "", code: "" });
+
+  const add = () => {
+    if (!draft.nodeId || !draft.filename) return;
+    onChange([...snippets, draft]);
+    setDraft({ nodeId: "", language: "typescript", filename: "", code: "" });
+    setAdding(false);
+  };
+
+  const update = (idx: number, updates: Partial<CodeSnippet>) => {
+    onChange(snippets.map((s, i) => i === idx ? { ...s, ...updates } : s));
+  };
+
+  const remove = (idx: number) => onChange(snippets.filter((_, i) => i !== idx));
+
+  return (
+    <div className="mt-2 space-y-2">
+      <span className="text-[10px] text-muted-foreground font-semibold uppercase">Code Snippets (X-Ray)</span>
+      {snippets.map((s, i) => (
+        <div key={i} className="flex gap-2 items-start p-2 rounded bg-secondary/20 border border-border/50">
+          <div className="flex-1 space-y-1">
+            <div className="flex gap-2">
+              <Input value={s.nodeId} onChange={(e) => update(i, { nodeId: e.target.value })} placeholder="Node ID (e.g. B)" className="h-7 text-xs w-20" />
+              <select value={s.language} onChange={(e) => update(i, { language: e.target.value })} className="h-7 text-xs rounded border border-input bg-background px-2">
+                <option value="swift">Swift</option>
+                <option value="go">Go</option>
+                <option value="python">Python</option>
+                <option value="typescript">TypeScript</option>
+              </select>
+              <Input value={s.filename} onChange={(e) => update(i, { filename: e.target.value })} placeholder="Filename" className="h-7 text-xs" />
+            </div>
+            <textarea
+              value={s.code}
+              onChange={(e) => update(i, { code: e.target.value })}
+              placeholder="Code..."
+              rows={4}
+              className="w-full text-xs font-mono rounded border border-input bg-background p-2 resize-y focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+          </div>
+          <button onClick={() => remove(i)} className="p-1 text-muted-foreground hover:text-destructive"><Trash2 className="w-3 h-3" /></button>
+        </div>
+      ))}
+      {adding ? (
+        <div className="space-y-1 p-2 rounded bg-secondary/20">
+          <div className="flex gap-2">
+            <Input value={draft.nodeId} onChange={(e) => setDraft({ ...draft, nodeId: e.target.value })} placeholder="Node ID" className="h-7 text-xs w-20" />
+            <select value={draft.language} onChange={(e) => setDraft({ ...draft, language: e.target.value })} className="h-7 text-xs rounded border border-input bg-background px-2">
+              <option value="swift">Swift</option>
+              <option value="go">Go</option>
+              <option value="python">Python</option>
+              <option value="typescript">TypeScript</option>
+            </select>
+            <Input value={draft.filename} onChange={(e) => setDraft({ ...draft, filename: e.target.value })} placeholder="Filename" className="h-7 text-xs" />
+          </div>
+          <textarea
+            value={draft.code}
+            onChange={(e) => setDraft({ ...draft, code: e.target.value })}
+            placeholder="Code..."
+            rows={4}
+            className="w-full text-xs font-mono rounded border border-input bg-background p-2 resize-y focus:outline-none focus:ring-1 focus:ring-ring"
+          />
+          <div className="flex gap-2">
+            <Button size="sm" onClick={add} className="h-7 text-xs">Add</Button>
+            <Button size="sm" variant="ghost" onClick={() => setAdding(false)} className="h-7 text-xs">Cancel</Button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={() => setAdding(true)} className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"><Plus className="w-3 h-3" /> Add snippet</button>
       )}
     </div>
   );
@@ -535,6 +611,7 @@ const AdminPage = () => {
                                 {project.videoUrl && <span className="ml-2 text-xs text-primary">🎬</span>}
                                 {project.architecture && <span className="ml-2 text-xs text-primary">📐</span>}
                                 {project.technicalChallenges && project.technicalChallenges.length > 0 && <span className="ml-2 text-xs text-primary">🔧 {project.technicalChallenges.length}</span>}
+                                {project.codeSnippets && project.codeSnippets.length > 0 && <span className="ml-2 text-xs text-primary">🔬 {project.codeSnippets.length}</span>}
                               </div>
                               <div className="flex items-center gap-2">
                                 {isProjectExpanded ? <ChevronUp className="w-3 h-3 text-muted-foreground" /> : <ChevronDown className="w-3 h-3 text-muted-foreground" />}
@@ -553,6 +630,10 @@ const AdminPage = () => {
                                 <ChallengesEditor
                                   challenges={project.technicalChallenges || []}
                                   onChange={(challenges) => updateProject(planet.id, project.id, { technicalChallenges: challenges })}
+                                />
+                                <CodeSnippetsEditor
+                                  snippets={project.codeSnippets || []}
+                                  onChange={(codeSnippets) => updateProject(planet.id, project.id, { codeSnippets })}
                                 />
                               </div>
                             )}

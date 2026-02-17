@@ -28,6 +28,20 @@
           "tags": ["Swift", "SwiftUI", "HealthKit"],
           "link": "#",
           "architecture": "graph TD\nA[SwiftUI Views] --> B[ViewModel]\nB --> C[HealthKit API]\nB --> D[CoreData]\nC --> E[Health Store]\nD --> F[Local Cache]",
+          "codeSnippets": [
+            {
+              "nodeId": "B",
+              "language": "swift",
+              "filename": "WorkoutViewModel.swift",
+              "code": "class WorkoutViewModel: ObservableObject {\n    @Published var heartRate: Double = 0\n    @Published var calories: Double = 0\n    private let healthStore = HKHealthStore()\n\n    func startTracking() {\n        let heartRateType = HKQuantityType\n            .quantityType(forIdentifier: .heartRate)!\n        let query = HKAnchoredObjectQuery(\n            type: heartRateType,\n            predicate: nil,\n            anchor: nil,\n            limit: HKObjectQueryNoLimit\n        ) { [weak self] _, samples, _, _, _ in\n            guard let sample = samples?.last\n                as? HKQuantitySample else { return }\n            DispatchQueue.main.async {\n                self?.heartRate = sample.quantity\n                    .doubleValue(for: .count().unitDivided(by: .minute()))\n            }\n        }\n        healthStore.execute(query)\n    }\n}"
+            },
+            {
+              "nodeId": "D",
+              "language": "swift",
+              "filename": "PersistenceController.swift",
+              "code": "struct PersistenceController {\n    static let shared = PersistenceController()\n    let container: NSPersistentContainer\n\n    init() {\n        container = NSPersistentContainer(name: \"FitnessModel\")\n        container.loadPersistentStores { _, error in\n            if let error = error {\n                fatalError(\"CoreData load failed: \\(error)\")\n            }\n        }\n        container.viewContext.automaticallyMergesChangesFromParent = true\n    }\n\n    func saveWorkout(_ workout: WorkoutData) {\n        let context = container.viewContext\n        let entity = WorkoutEntity(context: context)\n        entity.id = workout.id\n        entity.duration = workout.duration\n        entity.calories = workout.calories\n        try? context.save()\n    }\n}"
+            }
+          ],
           "technicalChallenges": [
             {
               "question": "Why SwiftUI over UIKit?",
@@ -70,6 +84,20 @@
           "tags": ["React", "Go", "PostgreSQL"],
           "link": "#",
           "architecture": "graph TD\nA[React Frontend] -->|REST API| B[Go Backend]\nB --> C[PostgreSQL]\nB --> D[Redis Cache]\nA --> E[Stripe SDK]\nB -->|Webhooks| E[Stripe]",
+          "codeSnippets": [
+            {
+              "nodeId": "B",
+              "language": "go",
+              "filename": "order_handler.go",
+              "code": "func (h *OrderHandler) ProcessCheckout(w http.ResponseWriter, r *http.Request) {\n    var req CheckoutRequest\n    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {\n        http.Error(w, \"invalid request\", http.StatusBadRequest)\n        return\n    }\n\n    // Concurrent inventory check using goroutines\n    errCh := make(chan error, len(req.Items))\n    for _, item := range req.Items {\n        go func(i OrderItem) {\n            errCh <- h.inventory.Reserve(r.Context(), i.ProductID, i.Qty)\n        }(item)\n    }\n\n    for range req.Items {\n        if err := <-errCh; err != nil {\n            h.inventory.RollbackAll(r.Context(), req.Items)\n            http.Error(w, err.Error(), http.StatusConflict)\n            return\n        }\n    }\n\n    order, err := h.orders.Create(r.Context(), req)\n    if err != nil {\n        http.Error(w, \"order failed\", http.StatusInternalServerError)\n        return\n    }\n    json.NewEncoder(w).Encode(order)\n}"
+            },
+            {
+              "nodeId": "C",
+              "language": "go",
+              "filename": "inventory_repo.go",
+              "code": "func (r *InventoryRepo) Reserve(ctx context.Context, productID string, qty int) error {\n    tx, err := r.db.BeginTx(ctx, nil)\n    if err != nil {\n        return err\n    }\n    defer tx.Rollback()\n\n    // Advisory lock prevents deadlocks during flash sales\n    _, err = tx.ExecContext(ctx,\n        \"SELECT pg_advisory_xact_lock(hashtext($1))\", productID)\n    if err != nil {\n        return err\n    }\n\n    var stock int\n    err = tx.QueryRowContext(ctx,\n        \"SELECT stock FROM products WHERE id = $1\", productID,\n    ).Scan(&stock)\n    if err != nil {\n        return err\n    }\n    if stock < qty {\n        return ErrInsufficientStock\n    }\n\n    _, err = tx.ExecContext(ctx,\n        \"UPDATE products SET stock = stock - $1 WHERE id = $2\",\n        qty, productID)\n    if err != nil {\n        return err\n    }\n    return tx.Commit()\n}"
+            }
+          ],
           "technicalChallenges": [
             {
               "question": "Why Go instead of Node.js for the backend?",
@@ -210,6 +238,20 @@
           "tags": ["Python", "Transformers", "FastAPI"],
           "link": "#",
           "architecture": "graph TD\nA[Text Input] --> B[Tokenizer]\nB --> C[BERT Encoder]\nC --> D[Attention Layers]\nD --> E[Classification Head]\nE --> F[Sentiment Score]",
+          "codeSnippets": [
+            {
+              "nodeId": "C",
+              "language": "python",
+              "filename": "encoder.py",
+              "code": "import torch\nfrom transformers import RobertaModel, RobertaTokenizer\n\nclass SentimentEncoder:\n    def __init__(self, model_name=\"roberta-base\"):\n        self.tokenizer = RobertaTokenizer.from_pretrained(model_name)\n        self.model = RobertaModel.from_pretrained(model_name)\n        self.model.eval()\n\n    def encode(self, text: str) -> torch.Tensor:\n        inputs = self.tokenizer(\n            text,\n            return_tensors=\"pt\",\n            truncation=True,\n            max_length=512,\n            padding=\"max_length\"\n        )\n        with torch.no_grad():\n            outputs = self.model(**inputs)\n        # Use [CLS] token embedding\n        return outputs.last_hidden_state[:, 0, :]"
+            },
+            {
+              "nodeId": "E",
+              "language": "python",
+              "filename": "classifier.py",
+              "code": "import torch.nn as nn\n\nclass SentimentClassifier(nn.Module):\n    def __init__(self, hidden_size=768, num_labels=3):\n        super().__init__()\n        self.dropout = nn.Dropout(0.1)\n        self.classifier = nn.Sequential(\n            nn.Linear(hidden_size, 256),\n            nn.ReLU(),\n            nn.Dropout(0.1),\n            nn.Linear(256, num_labels)\n        )\n\n    def forward(self, cls_embedding):\n        x = self.dropout(cls_embedding)\n        logits = self.classifier(x)\n        return logits"
+            }
+          ],
           "technicalChallenges": [
             {
               "question": "BERT vs RoBERTa for sentiment classification?",

@@ -9,6 +9,13 @@ export interface TechnicalChallenge {
   reasoning: string;
 }
 
+export interface CodeSnippet {
+  nodeId: string;
+  language: string;
+  filename: string;
+  code: string;
+}
+
 export interface Project {
   id: string;
   title: string;
@@ -19,6 +26,7 @@ export interface Project {
   studentCount?: number;
   architecture?: string; // Mermaid diagram definition
   technicalChallenges?: TechnicalChallenge[];
+  codeSnippets?: CodeSnippet[];
 }
 
 export interface ResearchMilestone {
