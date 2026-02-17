@@ -1,9 +1,10 @@
-import { useRef, useMemo, Suspense } from "react";
+import { useRef, useMemo, Suspense, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF, Float } from "@react-three/drei";
 import * as THREE from "three";
 
 interface PlanetModelProps {
+  planetId: string;
   color: string;
   size: number;
   orbitRadius: number;
@@ -15,6 +16,8 @@ interface PlanetModelProps {
   emissiveColor?: string;
   eccentricity?: number;
   axialTilt?: number;
+  onRegisterRef?: (planetId: string, ref: React.RefObject<THREE.Group>) => void;
+  onHover?: (planetId: string | null) => void;
 }
 
 const GLTFModel = ({ path, size }: { path: string; size: number }) => {
@@ -64,29 +67,30 @@ const Atmosphere = ({ color, size }: { color: string; size: number }) => {
 };
 
 const PlanetModel = ({
-  color, size, orbitRadius, orbitSpeed, onClick, name, modelPath,
+  planetId, color, size, orbitRadius, orbitSpeed, onClick, name, modelPath,
   glowIntensity = 1.5, emissiveColor, eccentricity = 0, axialTilt = 0,
+  onRegisterRef, onHover,
 }: PlanetModelProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const groupRef = useRef<THREE.Group>(null);
 
-  // Convert axial tilt from degrees to radians
   const tiltRad = useMemo(() => (axialTilt * Math.PI) / 180, [axialTilt]);
-  // Semi-minor axis for elliptical orbit: b = a * sqrt(1 - e^2)
   const semiMinor = useMemo(() => orbitRadius * Math.sqrt(1 - eccentricity * eccentricity), [orbitRadius, eccentricity]);
+
+  // Register ref for constellation lines
+  useEffect(() => {
+    onRegisterRef?.(planetId, groupRef as React.RefObject<THREE.Group>);
+  }, [planetId, onRegisterRef]);
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime() * orbitSpeed;
     if (groupRef.current) {
-      // Elliptical orbit: x = a*cos(t), z = b*sin(t)
       groupRef.current.position.x = Math.cos(t) * orbitRadius;
       groupRef.current.position.z = Math.sin(t) * semiMinor;
-      // Apply orbital plane tilt
       groupRef.current.position.y = Math.sin(t) * Math.sin(tiltRad) * orbitRadius * 0.1;
     }
     if (meshRef.current) {
       meshRef.current.rotation.y += 0.005;
-      // Axial tilt on the planet itself
       meshRef.current.rotation.z = tiltRad;
     }
   });
@@ -102,8 +106,15 @@ const PlanetModel = ({
         <mesh
           ref={meshRef}
           onClick={handleClick}
-          onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = "pointer"; }}
-          onPointerOut={() => { document.body.style.cursor = "auto"; }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = "pointer";
+            onHover?.(planetId);
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = "auto";
+            onHover?.(null);
+          }}
         >
           {modelPath ? (
             <Suspense fallback={<SphereFallback color={color} size={size} glowIntensity={glowIntensity} emissiveColor={emissiveColor} />}>
@@ -113,10 +124,8 @@ const PlanetModel = ({
             <SphereFallback color={color} size={size} glowIntensity={glowIntensity} emissiveColor={emissiveColor} />
           )}
         </mesh>
-
         <Atmosphere color={emissiveColor || color} size={size} />
       </Float>
-
       {/* Outer glow */}
       <mesh scale={1.4}>
         <sphereGeometry args={[size, 32, 32]} />
