@@ -85,6 +85,8 @@ export interface Profile {
   medium?: string;
   udemy?: string;
   youtube?: string;
+  about?: string;
+  resumeUrl?: string;
 }
 
 export interface ContentData {

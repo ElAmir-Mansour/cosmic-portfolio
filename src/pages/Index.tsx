@@ -5,10 +5,11 @@ import Starfield from "@/components/Starfield";
 import PlanetDrawer from "@/components/PlanetDrawer";
 import StarMap from "@/components/StarMap";
 import ContactSection from "@/components/ContactSection";
+import AboutSection from "@/components/AboutSection";
 import SpatialAudio from "@/components/SpatialAudio";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getAllContent, type Planet, type ContentData } from "@/services/DataService";
-import { Volume2, VolumeX } from "lucide-react";
+import { Volume2, VolumeX, ArrowDown, FileText } from "lucide-react";
 
 const GalaxyScene = lazy(() => import("@/components/GalaxyScene"));
 
@@ -18,6 +19,29 @@ const GalaxyLoader = () => (
     <p className="text-sm text-muted-foreground animate-pulse">Loading Galaxy…</p>
   </div>
 );
+
+// Typing effect hook
+const useTypingEffect = (text: string, speed = 40) => {
+  const [displayed, setDisplayed] = useState("");
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    setDisplayed("");
+    setDone(false);
+    let i = 0;
+    const interval = setInterval(() => {
+      i++;
+      setDisplayed(text.slice(0, i));
+      if (i >= text.length) {
+        setDone(true);
+        clearInterval(interval);
+      }
+    }, speed);
+    return () => clearInterval(interval);
+  }, [text, speed]);
+
+  return { displayed, done };
+};
 
 const Index = () => {
   const [content, setContent] = useState<ContentData | null>(null);
@@ -40,7 +64,9 @@ const Index = () => {
     getAllContent().then(setContent).catch(console.error);
   }, []);
 
-  // Compute highlighted planets based on selected planet's shared technologies
+  const tagline = content?.profile?.tagline || "";
+  const { displayed: typedTagline, done: typingDone } = useTypingEffect(tagline);
+
   const highlightedPlanets = useMemo(() => {
     if (!selectedPlanet || !content) return undefined;
     const selectedTags = new Set([
@@ -87,7 +113,7 @@ const Index = () => {
               transition={{ delay: 0.2, duration: 0.6 }}
               className="text-sm uppercase tracking-[0.3em] text-primary mb-4"
             >
-              NLP Researcher · Software Engineer · Instructional Designer
+              {content.profile.title}
             </motion.p>
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
@@ -101,17 +127,40 @@ const Index = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.6 }}
-              className="text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed"
+              className="text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed min-h-[4.5rem]"
             >
-              Researching how transformer models can detect early signs of depression from language.
-              Building the software, courses, and tools that turn complex ideas into real impact.
-              Shaped by 10+ years of engineering and leadership forged through military service.
+              {typedTagline}
+              {!typingDone && <span className="inline-block w-0.5 h-5 bg-primary animate-pulse ml-0.5 align-text-bottom" />}
             </motion.p>
+
+            {/* CTAs */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1, duration: 0.6 }}
+              className="mt-8 flex items-center justify-center gap-4 flex-wrap"
+            >
+              <a
+                href="#explore"
+                className="flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+              >
+                <ArrowDown className="w-4 h-4" /> Explore My Work
+              </a>
+              <a
+                href={content.profile.resumeUrl || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-6 py-3 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+              >
+                <FileText className="w-4 h-4" /> Download Resume
+              </a>
+            </motion.div>
+
             {!isMobile && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.2, duration: 0.8 }}
+                transition={{ delay: 1.4, duration: 0.8 }}
                 className="mt-12 text-xs text-muted-foreground animate-float"
               >
                 Scroll to explore the galaxy ↓
@@ -140,10 +189,13 @@ const Index = () => {
         )}
       </div>
 
+      {/* About Me */}
+      <AboutSection about={content.profile.about} />
+
       {/* Mobile: 2D Star Map */}
       {isMobile && (
         <div id="explore">
-          <StarMap planets={content.planets} />
+          <StarMap planets={content.planets} onPlanetClick={setSelectedPlanet} />
         </div>
       )}
 
