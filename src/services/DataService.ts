@@ -3,6 +3,12 @@
 
 const BASE_URL = "/data";
 
+export interface TechnicalChallenge {
+  question: string;
+  decision: string;
+  reasoning: string;
+}
+
 export interface Project {
   id: string;
   title: string;
@@ -12,6 +18,28 @@ export interface Project {
   videoUrl?: string;
   studentCount?: number;
   architecture?: string; // Mermaid diagram definition
+  technicalChallenges?: TechnicalChallenge[];
+}
+
+export interface ResearchMilestone {
+  id: string;
+  title: string;
+  date: string;
+  status: "completed" | "in-progress" | "upcoming";
+  description: string;
+}
+
+export interface ImpactMetric {
+  label: string;
+  value: string;
+  sublabel: string;
+  icon: string; // icon name: "youtube" | "globe" | "graduation" | "trending"
+}
+
+export interface LearningPath {
+  level: string;
+  title: string;
+  topics: string[];
 }
 
 export interface Planet {
@@ -30,6 +58,12 @@ export interface Planet {
   emissiveColor?: string;
   eccentricity?: number;  // 0 = circle, 0.5 = ellipse
   axialTilt?: number;     // degrees
+  // NLP Research specific
+  researchAbstract?: string;
+  researchMilestones?: ResearchMilestone[];
+  // E-Learning specific
+  impactMetrics?: ImpactMetric[];
+  learningPaths?: LearningPath[];
 }
 
 export interface Profile {

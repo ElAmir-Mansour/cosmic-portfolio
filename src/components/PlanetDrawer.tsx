@@ -108,7 +108,7 @@ const DefaultProjectCard = ({ project }: { project: Planet["projects"][0] }) => 
     {project.architecture && (
       <ArchitectureDiagram definition={project.architecture} title={`${project.title} Architecture`} />
     )}
-    <TechnicalXRay projectId={project.id} />
+    <TechnicalXRay challenges={project.technicalChallenges} />
   </div>
 );
 
@@ -175,7 +175,7 @@ const PlanetDrawer = ({ planet, onClose }: PlanetDrawerProps) => {
               </div>
 
               {/* Research Chronicle for NLP */}
-              {isNLP && <ResearchChronicle />}
+              {isNLP && <ResearchChronicle abstract={planet.researchAbstract} milestones={planet.researchMilestones} />}
               {isNLP && <NLPSandbox />}
             </div>
           </motion.aside>
