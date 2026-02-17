@@ -1,7 +1,16 @@
 import { useRef, useMemo, Suspense, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
-import { useGLTF, Float } from "@react-three/drei";
+import { useGLTF, Float, Html } from "@react-three/drei";
 import * as THREE from "three";
+import { Smartphone, Code2, GraduationCap, Brain, Kanban, type LucideIcon } from "lucide-react";
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  "smartphone": Smartphone,
+  "code-2": Code2,
+  "graduation-cap": GraduationCap,
+  "brain": Brain,
+  "kanban": Kanban,
+};
 
 interface PlanetModelProps {
   planetId: string;
@@ -11,6 +20,7 @@ interface PlanetModelProps {
   orbitSpeed: number;
   onClick?: (groupRef: React.RefObject<THREE.Group>) => void;
   name: string;
+  icon?: string;
   modelPath?: string;
   glowIntensity?: number;
   emissiveColor?: string;
@@ -67,12 +77,13 @@ const Atmosphere = ({ color, size }: { color: string; size: number }) => {
 };
 
 const PlanetModel = ({
-  planetId, color, size, orbitRadius, orbitSpeed, onClick, name, modelPath,
+  planetId, color, size, orbitRadius, orbitSpeed, onClick, name, icon, modelPath,
   glowIntensity = 1.5, emissiveColor, eccentricity = 0, axialTilt = 0,
   onRegisterRef, onHover,
 }: PlanetModelProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const groupRef = useRef<THREE.Group>(null);
+  const IconComponent = icon ? ICON_MAP[icon] : null;
 
   const tiltRad = useMemo(() => (axialTilt * Math.PI) / 180, [axialTilt]);
   const semiMinor = useMemo(() => orbitRadius * Math.sqrt(1 - eccentricity * eccentricity), [orbitRadius, eccentricity]);
@@ -131,6 +142,39 @@ const PlanetModel = ({
         <sphereGeometry args={[size, 32, 32]} />
         <meshBasicMaterial color={color} transparent opacity={0.05} />
       </mesh>
+      {/* Floating label + icon */}
+      <Html
+        position={[0, size + 0.6, 0]}
+        center
+        distanceFactor={12}
+        style={{ pointerEvents: "none", userSelect: "none" }}
+      >
+        <div className="flex flex-col items-center gap-1 whitespace-nowrap">
+          {IconComponent && (
+            <div
+              className="rounded-full p-1.5 backdrop-blur-sm"
+              style={{
+                background: `${color}22`,
+                boxShadow: `0 0 12px ${color}66`,
+                border: `1px solid ${color}44`,
+              }}
+            >
+              <IconComponent size={14} color={color} strokeWidth={2.5} />
+            </div>
+          )}
+          <span
+            className="text-[10px] font-semibold tracking-wide px-2 py-0.5 rounded-full backdrop-blur-sm"
+            style={{
+              color,
+              background: `${color}15`,
+              textShadow: `0 0 8px ${color}88`,
+              border: `1px solid ${color}33`,
+            }}
+          >
+            {name}
+          </span>
+        </div>
+      </Html>
     </group>
   );
 };
