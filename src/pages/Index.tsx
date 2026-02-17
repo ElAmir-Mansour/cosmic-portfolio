@@ -189,15 +189,15 @@ const Index = () => {
         )}
       </div>
 
-      {/* About Me */}
-      <AboutSection about={content.profile.about} />
-
       {/* Mobile: 2D Star Map */}
       {isMobile && (
         <div id="explore">
           <StarMap planets={content.planets} onPlanetClick={setSelectedPlanet} />
         </div>
       )}
+
+      {/* About Me */}
+      <AboutSection about={content.profile.about} />
 
       {/* Contact */}
       <ContactSection profile={content.profile} />
