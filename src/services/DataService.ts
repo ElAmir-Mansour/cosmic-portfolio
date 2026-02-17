@@ -61,6 +61,7 @@ export interface Planet {
   description: string;
   skills: string[];
   projects: Project[];
+  icon?: string; // lucide icon name e.g. "smartphone", "brain", "graduation-cap"
   modelPath?: string;
   glowIntensity?: number;
   emissiveColor?: string;

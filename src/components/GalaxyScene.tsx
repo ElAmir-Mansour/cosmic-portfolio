@@ -210,6 +210,7 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet, highlightedPlanet
                 orbitRadius={planet.orbitRadius}
                 orbitSpeed={planet.orbitSpeed}
                 name={planet.name}
+                icon={planet.icon}
                 modelPath={planet.modelPath}
                 glowIntensity={planet.glowIntensity}
                 emissiveColor={planet.emissiveColor}
