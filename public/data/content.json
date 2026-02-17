@@ -27,7 +27,19 @@
           "description": "A health and fitness app with real-time workout tracking, custom routines, and HealthKit integration.",
           "tags": ["Swift", "SwiftUI", "HealthKit"],
           "link": "#",
-          "architecture": "graph TD\nA[SwiftUI Views] --> B[ViewModel]\nB --> C[HealthKit API]\nB --> D[CoreData]\nC --> E[Health Store]\nD --> F[Local Cache]"
+          "architecture": "graph TD\nA[SwiftUI Views] --> B[ViewModel]\nB --> C[HealthKit API]\nB --> D[CoreData]\nC --> E[Health Store]\nD --> F[Local Cache]",
+          "technicalChallenges": [
+            {
+              "question": "Why SwiftUI over UIKit?",
+              "decision": "SwiftUI with UIKit bridges for complex views",
+              "reasoning": "SwiftUI provides declarative UI composition that speeds up iteration. UIKit bridges were used for the custom workout animation layer where SwiftUI's Canvas API lacked fine-grained control over frame timing."
+            },
+            {
+              "question": "How was HealthKit data synchronized?",
+              "decision": "Background fetch with CoreData buffer",
+              "reasoning": "HealthKit queries are expensive. A CoreData intermediate cache reduces HealthKit calls to scheduled background fetches, keeping the UI responsive while maintaining data freshness within 15-minute intervals."
+            }
+          ]
         },
         {
           "id": "ios-2",
@@ -57,7 +69,19 @@
           "description": "A scalable marketplace with real-time inventory, payment processing, and analytics dashboard.",
           "tags": ["React", "Go", "PostgreSQL"],
           "link": "#",
-          "architecture": "graph TD\nA[React Frontend] -->|REST API| B[Go Backend]\nB --> C[PostgreSQL]\nB --> D[Redis Cache]\nA --> E[Stripe SDK]\nB -->|Webhooks| E[Stripe]"
+          "architecture": "graph TD\nA[React Frontend] -->|REST API| B[Go Backend]\nB --> C[PostgreSQL]\nB --> D[Redis Cache]\nA --> E[Stripe SDK]\nB -->|Webhooks| E[Stripe]",
+          "technicalChallenges": [
+            {
+              "question": "Why Go instead of Node.js for the backend?",
+              "decision": "Go with goroutines for concurrent order processing",
+              "reasoning": "The marketplace required handling 500+ concurrent checkout sessions. Go's goroutine model provided predictable memory usage under load, unlike Node.js's event loop which showed GC pauses at high concurrency during load testing."
+            },
+            {
+              "question": "How was inventory consistency maintained?",
+              "decision": "PostgreSQL advisory locks with optimistic concurrency",
+              "reasoning": "Traditional row-level locks caused deadlocks during flash sales. Advisory locks on product IDs combined with version-based optimistic concurrency eliminated deadlocks while maintaining strong consistency."
+            }
+          ]
         },
         {
           "id": "fs-2",
@@ -65,7 +89,14 @@
           "description": "Centralized monitoring tool for CI/CD pipelines, container health, and deployment metrics.",
           "tags": ["TypeScript", "Docker", "Redis"],
           "link": "#",
-          "architecture": "graph TD\nA[Dashboard UI] --> B[WebSocket Server]\nB --> C[Docker API]\nB --> D[CI/CD Hooks]\nC --> E[Container Metrics]\nD --> F[Build Logs]"
+          "architecture": "graph TD\nA[Dashboard UI] --> B[WebSocket Server]\nB --> C[Docker API]\nB --> D[CI/CD Hooks]\nC --> E[Container Metrics]\nD --> F[Build Logs]",
+          "technicalChallenges": [
+            {
+              "question": "Real-time updates: WebSocket vs SSE?",
+              "decision": "WebSocket with automatic reconnection",
+              "reasoning": "Server-Sent Events would have simplified the server, but the dashboard requires bidirectional communication for triggering deployments and sending commands to containers. WebSocket with exponential backoff reconnection provided the reliability needed."
+            }
+          ]
         }
       ]
     },
@@ -81,6 +112,29 @@
       "axialTilt": 5,
       "description": "Educational platforms and content systems that make complex topics accessible and engaging. Over a decade of teaching experience through 'Learn With ElAmir.'",
       "skills": ["LMS Design", "Video Production", "Curriculum Design", "Technical Writing"],
+      "impactMetrics": [
+        { "label": "YouTube Reach", "value": "15K+", "sublabel": "Subscribers", "icon": "youtube" },
+        { "label": "Udemy Students", "value": "3,200+", "sublabel": "Enrolled", "icon": "globe" },
+        { "label": "Courses Published", "value": "12", "sublabel": "Active", "icon": "graduation" },
+        { "label": "Completion Rate", "value": "78%", "sublabel": "Above Average", "icon": "trending" }
+      ],
+      "learningPaths": [
+        {
+          "level": "Beginner",
+          "title": "Foundations of Software Engineering",
+          "topics": ["Programming Fundamentals", "Data Structures", "Version Control (Git)", "Basic Web Development"]
+        },
+        {
+          "level": "Intermediate",
+          "title": "Building Real Applications",
+          "topics": ["API Design", "Database Modeling", "Authentication Patterns", "Testing Strategies"]
+        },
+        {
+          "level": "Advanced",
+          "title": "Architecture and Scale",
+          "topics": ["System Design", "Microservices", "CI/CD Pipelines", "Performance Optimization"]
+        }
+      ],
       "projects": [
         {
           "id": "el-1",
@@ -110,6 +164,44 @@
       "axialTilt": 20,
       "description": "Natural Language Processing research focused on mental health applications. Using transformer models and linguistic analysis to detect early signs of depression from text data.",
       "skills": ["Python", "PyTorch", "Transformers", "spaCy", "NLTK"],
+      "researchAbstract": "This research investigates the application of transformer-based language models for early detection of depressive symptoms in unstructured text. By fine-tuning BERT and RoBERTa on curated mental health corpora, the study evaluates how attention mechanisms can capture subtle linguistic markers of depression, including reduced lexical diversity, increased first-person pronoun usage, and persistent negative sentiment patterns.\n\nThe methodology combines domain-adaptive pre-training with multi-task learning to improve generalization across diverse text sources. Preliminary results show that attention-based models outperform traditional feature-engineering approaches by 12-18% in F1 score on held-out clinical validation sets.",
+      "researchMilestones": [
+        {
+          "id": "m1",
+          "title": "Literature Review",
+          "date": "Sep 2023",
+          "status": "completed",
+          "description": "Surveyed 80+ papers on NLP-based mental health screening, focusing on transformer architectures for depression detection from social media and clinical text."
+        },
+        {
+          "id": "m2",
+          "title": "Dataset Curation",
+          "date": "Jan 2024",
+          "status": "completed",
+          "description": "Collected and preprocessed text corpora from publicly available mental health forums. Applied IRB-compliant anonymization and balanced class distribution."
+        },
+        {
+          "id": "m3",
+          "title": "Baseline Models",
+          "date": "May 2024",
+          "status": "completed",
+          "description": "Trained TF-IDF + SVM and LSTM baselines to establish benchmark F1 scores. Results confirmed the need for attention-based architectures."
+        },
+        {
+          "id": "m4",
+          "title": "Transformer Fine-Tuning",
+          "date": "Oct 2024",
+          "status": "in-progress",
+          "description": "Fine-tuning BERT and RoBERTa on the curated dataset. Experimenting with domain-adaptive pre-training and multi-task learning objectives."
+        },
+        {
+          "id": "m5",
+          "title": "Evaluation & Thesis Writing",
+          "date": "Mar 2025",
+          "status": "upcoming",
+          "description": "Final model evaluation with cross-validation, ablation studies, and comparison against clinical baselines. Drafting the thesis document."
+        }
+      ],
       "projects": [
         {
           "id": "nlp-1",
@@ -117,7 +209,19 @@
           "description": "Real-time sentiment classifier for social media streams with multilingual support.",
           "tags": ["Python", "Transformers", "FastAPI"],
           "link": "#",
-          "architecture": "graph TD\nA[Text Input] --> B[Tokenizer]\nB --> C[BERT Encoder]\nC --> D[Attention Layers]\nD --> E[Classification Head]\nE --> F[Sentiment Score]"
+          "architecture": "graph TD\nA[Text Input] --> B[Tokenizer]\nB --> C[BERT Encoder]\nC --> D[Attention Layers]\nD --> E[Classification Head]\nE --> F[Sentiment Score]",
+          "technicalChallenges": [
+            {
+              "question": "BERT vs RoBERTa for sentiment classification?",
+              "decision": "RoBERTa with domain-adaptive pre-training",
+              "reasoning": "RoBERTa's dynamic masking and larger batch training showed 3% higher F1 on our mental health text corpus. Domain-adaptive pre-training on unlabeled forum data before fine-tuning further improved recall for subtle negative sentiment by 8%."
+            },
+            {
+              "question": "How were attention weights validated?",
+              "decision": "Comparison with human annotator agreement scores",
+              "reasoning": "Attention weights were compared against expert annotations of depression markers. Cohen's kappa between model attention and human annotations reached 0.72, confirming the model attends to clinically relevant linguistic features."
+            }
+          ]
         },
         {
           "id": "nlp-2",
@@ -146,7 +250,14 @@
           "title": "Agile Transformation",
           "description": "Led a 40-person engineering org through a waterfall-to-agile transition over 6 months.",
           "tags": ["Scrum", "Leadership", "Process"],
-          "link": "#"
+          "link": "#",
+          "technicalChallenges": [
+            {
+              "question": "How was resistance to agile managed?",
+              "decision": "Incremental adoption with pilot teams",
+              "reasoning": "Rather than a full organizational switch, two pilot teams adopted Scrum for one quarter. Their 40% improvement in delivery predictability created internal demand, making the broader rollout collaborative rather than top-down."
+            }
+          ]
         },
         {
           "id": "pm-2",
