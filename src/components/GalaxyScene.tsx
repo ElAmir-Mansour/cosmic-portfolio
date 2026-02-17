@@ -5,6 +5,7 @@ import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
 import PlanetModel from "./PlanetModel";
 import CameraController from "./CameraController";
+import ConstellationLines from "./ConstellationLines";
 import type { Planet } from "@/services/DataService";
 
 // Performance tier: "high" | "medium" | "low"
@@ -15,6 +16,8 @@ interface GalaxySceneProps {
   planets: Planet[];
   onPlanetClick: (planet: Planet) => void;
   selectedPlanet: Planet | null;
+  highlightedPlanets?: Set<string>;
+  onPlanetHover?: (planetId: string | null) => void;
 }
 
 const Sun = () => (
@@ -143,11 +146,12 @@ const STAR_COUNTS: Record<PerfTier, number> = {
   low: 500,
 };
 
-const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet }: GalaxySceneProps) => {
+const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet, highlightedPlanets, onPlanetHover }: GalaxySceneProps) => {
   const [followRef, setFollowRef] = useState<React.RefObject<THREE.Group> | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [perfTier, setPerfTier] = useState<PerfTier>("high");
   const controlsRef = useRef<any>(null);
+  const planetRefsMap = useRef<Map<string, React.RefObject<THREE.Group>>>(new Map());
 
   useEffect(() => {
     if (!selectedPlanet) {
@@ -178,6 +182,10 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet }: GalaxySceneProp
     setPerfTier((prev) => prev === "high" ? "medium" : prev === "medium" ? "low" : "high");
   }, []);
 
+  const registerPlanetRef = useCallback((planetId: string, ref: React.RefObject<THREE.Group>) => {
+    planetRefsMap.current.set(planetId, ref);
+  }, []);
+
   const starCount = STAR_COUNTS[perfTier];
 
   return (
@@ -196,6 +204,7 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet }: GalaxySceneProp
             {planets.map((planet) => (
               <PlanetModel
                 key={planet.id}
+                planetId={planet.id}
                 color={planet.color}
                 size={planet.size}
                 orbitRadius={planet.orbitRadius}
@@ -207,8 +216,16 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet }: GalaxySceneProp
                 eccentricity={planet.eccentricity}
                 axialTilt={planet.axialTilt}
                 onClick={(ref) => handlePlanetClick(planet, ref)}
+                onRegisterRef={registerPlanetRef}
+                onHover={onPlanetHover}
               />
             ))}
+            {/* Constellation connection lines */}
+            <ConstellationLines
+              planets={planets}
+              planetRefs={planetRefsMap.current}
+              highlightedPlanets={highlightedPlanets}
+            />
             {/* Elliptical orbit rings */}
             {planets.map((planet) => {
               const ecc = planet.eccentricity || 0;
