@@ -1,93 +1,128 @@
 
 
-# Interactive X-Ray Architecture Walkthroughs
+# Portfolio Enhancement Plan
 
-## Overview
-Upgrade the `ArchitectureDiagram` component so that each node in the SVG flowchart is clickable. Clicking a node reveals a syntax-highlighted code snippet tied to that technology/layer, proving real code quality directly inside the visualization.
+## Priority 1: Hero Section Overhaul
 
-## Data Schema Changes
+**Problem**: Hardcoded text, no call-to-action, no visual hook.
 
-### 1. Extend `DataService.ts` with a `CodeSnippet` interface
+**Changes**:
+- Pull hero text from `content.json` profile data (name, title, tagline) instead of hardcoding
+- Add a prominent CTA button: "Explore My Work" that smooth-scrolls to the galaxy
+- Add a secondary CTA: "Download Resume" linking to a PDF
+- Add animated typing effect on the tagline for visual interest
 
-Add a new interface and attach it to the `Project` type:
+**Files**: `src/pages/Index.tsx`, `public/data/content.json`
 
-```typescript
-export interface CodeSnippet {
-  nodeId: string;       // matches the Mermaid node ID (e.g., "B", "C")
-  language: string;     // "swift", "go", "python", "typescript", etc.
-  filename: string;     // e.g., "ViewModel.swift", "main.go"
-  code: string;         // the actual code string (multi-line)
-}
-```
+---
 
-Add `codeSnippets?: CodeSnippet[]` to the `Project` interface alongside the existing `architecture` field.
+## Priority 2: Hide Admin Link from Public Navbar
 
-### 2. Populate `content.json` with sample snippets
+**Problem**: The `/admin` route is visible to all visitors.
 
-For projects that already have `architecture` definitions (e.g., Fitness Tracker, E-Commerce Platform, Sentiment Analysis Engine), add 2-3 representative code snippets per project. Examples:
+**Changes**:
+- Remove "Admin" from the `navItems` array in `Navbar.tsx`
+- Users can still access `/admin` by typing the URL directly (security through obscurity is fine for a CMS with localStorage)
 
-- **Fitness Tracker** node "B" (ViewModel): A SwiftUI ObservableObject snippet showing HealthKit data binding
-- **E-Commerce** node "B" (Go Backend): A Go HTTP handler showing goroutine-based order processing
-- **Sentiment Analysis** node "C" (BERT Encoder): A Python snippet showing model loading and tokenization
+**Files**: `src/components/Navbar.tsx`
 
-## Component Changes
+---
 
-### 3. Refactor `ArchitectureDiagram.tsx`
+## Priority 3: Responsive Navbar with Mobile Menu
 
-**Props**: Accept a new optional `codeSnippets` prop of type `CodeSnippet[]`.
+**Problem**: Nav items and social icons overflow on small screens.
 
-**Interactive nodes**: 
-- Make each SVG `<g>` node clickable with a `cursor: pointer` style and a hover highlight effect (brighter stroke on hover)
-- Track `selectedNodeId` state
-- When a node is clicked, check if a matching snippet exists in `codeSnippets` (by `nodeId`)
-- If a match exists, display the code panel; if not, show nothing (node stays non-interactive visually for nodes without snippets)
-- Nodes with available snippets get a small dot indicator (e.g., a 4px circle in the corner) so users know they are clickable
+**Changes**:
+- Add a hamburger menu button visible on mobile (`md:hidden`)
+- Collapse nav items and social links into a slide-down/drawer menu on mobile
+- Desktop layout stays unchanged
 
-**Code panel**: 
-- Render below the SVG as a collapsible section within the same modal
-- Show the filename as a header tab, the language as a badge, and the code in a `<pre><code>` block
-- Apply basic syntax coloring using a lightweight approach: keyword highlighting via regex for common keywords (`const`, `func`, `class`, `import`, `return`, `if`, `for`, `def`, `self`) mapped to CSS classes
-- No external syntax highlighting library needed; simple regex-based token coloring keeps the bundle small
+**Files**: `src/components/Navbar.tsx`
 
-**Close behavior**: Clicking the same node again or clicking a different node toggles/swaps the snippet.
+---
 
-### 4. Update `PlanetDrawer.tsx`
+## Priority 4: "About Me" Story Section
 
-Pass `project.codeSnippets` to `ArchitectureDiagram` in the `DefaultProjectCard` component:
+**Problem**: No dedicated section for background, military service, experience narrative.
 
-```tsx
-<ArchitectureDiagram 
-  definition={project.architecture} 
-  title={`${project.title} Architecture`}
-  codeSnippets={project.codeSnippets}
-/>
-```
+**Changes**:
+- Add an `about` field to the `Profile` interface and `content.json` (a few paragraphs about your background)
+- Create a new `AboutSection.tsx` component placed between the hero and galaxy
+- Include key stats (10+ years experience, military background, research focus) as animated counters
+- Parallax scroll-triggered entrance animation
 
-### 5. Admin Editor Support
+**Files**: `src/services/DataService.ts`, `public/data/content.json`, `src/components/AboutSection.tsx` (new), `src/pages/Index.tsx`
 
-Add a `CodeSnippetsEditor` sub-component in `Admin.tsx` that allows adding/editing/removing code snippets per project. Each snippet entry needs fields for `nodeId`, `language`, `filename`, and a `<textarea>` for the `code` content.
+---
 
-## Visual Design
+## Priority 5: Enhanced Mobile Experience
 
-- Clickable nodes get a subtle pulsing glow on hover (CSS transition on stroke opacity)
-- The code panel uses a dark background (`bg-background`) with monospace font
-- Keywords are colored using the existing primary/accent theme colors
-- A small "code available" indicator dot appears on nodes that have linked snippets
-- Smooth expand/collapse animation using framer-motion for the code panel
+**Problem**: Mobile users get a stripped-down accordion with no interactivity.
 
-## Technical Details
+**Changes**:
+- Update `StarMap.tsx` so tapping a planet opens the full `PlanetDrawer` (same as desktop) instead of just expanding an inline accordion
+- Pass an `onPlanetClick` callback to `StarMap` and wire it to `PlanetDrawer`
+- Add planet icons and color indicators to the mobile star map cards
 
-- **Lightweight syntax coloring**: A simple `highlightCode(code, language)` function that wraps known keywords in `<span>` tags with color classes. Covers Swift, Go, Python, TypeScript keywords. No heavy dependency like Prism or Shiki.
-- **Node matching**: The `nodeId` in `CodeSnippet` maps directly to the Mermaid node ID parsed by `parseMermaid()` (e.g., `"A"`, `"B"`, `"C"`).
-- **Responsive**: The code panel scrolls horizontally for long lines and vertically if the snippet exceeds the modal height.
+**Files**: `src/components/StarMap.tsx`, `src/pages/Index.tsx`
 
-## File Changes Summary
+---
 
-| File | Change |
-|------|--------|
-| `src/services/DataService.ts` | Add `CodeSnippet` interface, add `codeSnippets?` to `Project` |
-| `public/data/content.json` | Add sample code snippets to 3 projects |
-| `src/components/ArchitectureDiagram.tsx` | Add click handling, hover states, code panel with syntax coloring |
-| `src/components/PlanetDrawer.tsx` | Pass `codeSnippets` prop to `ArchitectureDiagram` |
-| `src/pages/Admin.tsx` | Add `CodeSnippetsEditor` for editing snippets per project |
+## Priority 6: Contact Form
+
+**Problem**: Contact section only has links, no way to send a message directly.
+
+**Changes**:
+- Add a simple contact form (Name, Email, Message) below the social links
+- Since there's no backend, use a `mailto:` link with pre-filled subject/body as the submit action, or integrate with a free service like Formspree
+- Form validation with react-hook-form (already installed)
+
+**Files**: `src/components/ContactSection.tsx`
+
+---
+
+## Priority 7: SEO and Open Graph Meta Tags
+
+**Problem**: No social sharing preview, default page title.
+
+**Changes**:
+- Update `index.html` with proper `<title>`, `<meta name="description">`, and Open Graph tags (`og:title`, `og:description`, `og:image`, `og:url`)
+- Add a Twitter card meta tag
+- Set a proper favicon if not already done
+
+**Files**: `index.html`
+
+---
+
+## Priority 8: Scroll Animations for All Sections
+
+**Problem**: Contact section and mobile star map appear without animation.
+
+**Changes**:
+- Wrap `ContactSection` and `StarMap` in framer-motion viewport-triggered animations (`whileInView`)
+- Add staggered fade-in for social link badges in the contact section
+
+**Files**: `src/components/ContactSection.tsx`, `src/components/StarMap.tsx`
+
+---
+
+## Implementation Order
+
+1. Hide Admin link (2 min, quick win)
+2. Responsive Navbar (30 min)
+3. Hero Section overhaul (20 min)
+4. SEO meta tags (10 min)
+5. About Me section (30 min)
+6. Mobile planet drawer (20 min)
+7. Contact form (20 min)
+8. Scroll animations (15 min)
+
+---
+
+## Technical Notes
+
+- No new dependencies needed -- everything uses existing framer-motion, react-hook-form, and Lucide icons
+- The `content.json` changes are additive (new fields with `?` optional typing), so existing localStorage data won't break
+- The About section uses the same glassmorphism design system (`glass` class, neon accents) for visual consistency
+- Mobile menu uses the existing `useIsMobile()` hook for breakpoint detection
 
