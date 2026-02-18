@@ -6,9 +6,9 @@ import * as THREE from "three";
 import PlanetModel from "./PlanetModel";
 import CameraController from "./CameraController";
 import ConstellationLines from "./ConstellationLines";
+import NebulaCloud from "./NebulaCloud";
 import type { Planet } from "@/services/DataService";
 
-// Performance tier: "high" | "medium" | "low"
 type PerfTier = "high" | "medium" | "low";
 const PerfContext = createContext<PerfTier>("high");
 
@@ -23,17 +23,11 @@ interface GalaxySceneProps {
 const Sun = () => (
   <mesh>
     <sphereGeometry args={[1.2, 64, 64]} />
-    <meshStandardMaterial
-      color="#fbbf24"
-      emissive="#fbbf24"
-      emissiveIntensity={2}
-      toneMapped={false}
-    />
+    <meshStandardMaterial color="#fbbf24" emissive="#fbbf24" emissiveIntensity={2} toneMapped={false} />
     <pointLight color="#fbbf24" intensity={2} distance={50} />
   </mesh>
 );
 
-// Auto-detect FPS and report tier changes
 const FPSMonitor = ({ onTierChange }: { onTierChange: (tier: PerfTier) => void }) => {
   const frames = useRef(0);
   const lastTime = useRef(performance.now());
@@ -48,11 +42,9 @@ const FPSMonitor = ({ onTierChange }: { onTierChange: (tier: PerfTier) => void }
       const fps = (frames.current / delta) * 1000;
       frames.current = 0;
       lastTime.current = now;
-
       let newTier: PerfTier = "high";
       if (fps < 20) newTier = "low";
       else if (fps < 40) newTier = "medium";
-
       if (newTier !== currentTier.current) {
         stableCount.current++;
         if (stableCount.current >= 2) {
@@ -65,11 +57,9 @@ const FPSMonitor = ({ onTierChange }: { onTierChange: (tier: PerfTier) => void }
       }
     }
   });
-
   return null;
 };
 
-// Adjust DPR based on tier
 const DPRController = () => {
   const tier = useContext(PerfContext);
   const { gl } = useThree();
@@ -85,12 +75,7 @@ const PostEffects = () => {
   if (tier === "low") return null;
   return (
     <EffectComposer>
-      <Bloom
-        luminanceThreshold={1.0}
-        luminanceSmoothing={0.3}
-        intensity={tier === "high" ? 1.5 : 0.8}
-        mipmapBlur
-      />
+      <Bloom luminanceThreshold={1.0} luminanceSmoothing={0.3} intensity={tier === "high" ? 1.5 : 0.8} mipmapBlur />
       <Vignette offset={0.3} darkness={tier === "high" ? 0.7 : 0.4} />
     </EffectComposer>
   );
@@ -107,49 +92,34 @@ const LoadingBar = () => {
       const interval = setInterval(() => {
         p += 15;
         setDisplayProgress(Math.min(p, 100));
-        if (p >= 100) {
-          clearInterval(interval);
-          setTimeout(() => setVisible(false), 300);
-        }
+        if (p >= 100) { clearInterval(interval); setTimeout(() => setVisible(false), 300); }
       }, 80);
       return () => clearInterval(interval);
     }
     setDisplayProgress(progress);
-    if (!active && progress >= 100) {
-      setTimeout(() => setVisible(false), 300);
-    }
+    if (!active && progress >= 100) setTimeout(() => setVisible(false), 300);
   }, [progress, active]);
 
   if (!visible) return null;
   return (
     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm">
       <div className="w-48 h-1 rounded-full bg-secondary overflow-hidden">
-        <div
-          className="h-full rounded-full bg-primary transition-all duration-300"
-          style={{ width: `${displayProgress}%` }}
-        />
+        <div className="h-full rounded-full bg-primary transition-all duration-300" style={{ width: `${displayProgress}%` }} />
       </div>
       <p className="mt-3 text-xs text-muted-foreground font-mono">{Math.round(displayProgress)}%</p>
     </div>
   );
 };
 
-const TIER_LABELS: Record<PerfTier, string> = {
-  high: "✦ High",
-  medium: "◈ Medium",
-  low: "⚡ Low",
-};
-
-const STAR_COUNTS: Record<PerfTier, number> = {
-  high: 3000,
-  medium: 1500,
-  low: 500,
-};
+const TIER_LABELS: Record<PerfTier, string> = { high: "✦ High", medium: "◈ Medium", low: "⚡ Low" };
+const STAR_COUNTS: Record<PerfTier, number> = { high: 3000, medium: 1500, low: 500 };
+const SPEED_OPTIONS = [0.25, 0.5, 1, 2, 4];
 
 const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet, highlightedPlanets, onPlanetHover }: GalaxySceneProps) => {
   const [followRef, setFollowRef] = useState<React.RefObject<THREE.Group> | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [perfTier, setPerfTier] = useState<PerfTier>("high");
+  const [speedMultiplier, setSpeedMultiplier] = useState(1);
   const controlsRef = useRef<any>(null);
   const planetRefsMap = useRef<Map<string, React.RefObject<THREE.Group>>>(new Map());
 
@@ -182,6 +152,13 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet, highlightedPlanet
     setPerfTier((prev) => prev === "high" ? "medium" : prev === "medium" ? "low" : "high");
   }, []);
 
+  const cycleSpeed = useCallback(() => {
+    setSpeedMultiplier((prev) => {
+      const idx = SPEED_OPTIONS.indexOf(prev);
+      return SPEED_OPTIONS[(idx + 1) % SPEED_OPTIONS.length];
+    });
+  }, []);
+
   const registerPlanetRef = useCallback((planetId: string, ref: React.RefObject<THREE.Group>) => {
     planetRefsMap.current.set(planetId, ref);
   }, []);
@@ -191,16 +168,14 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet, highlightedPlanet
   return (
     <PerfContext.Provider value={perfTier}>
       <div className="w-full h-full relative">
-        <Canvas
-          camera={{ position: [0, 12, 20], fov: 50 }}
-          style={{ background: "hsl(230, 25%, 4%)" }}
-        >
+        <Canvas camera={{ position: [0, 12, 20], fov: 50 }} style={{ background: "hsl(230, 25%, 4%)" }}>
           <Suspense fallback={null}>
             <FPSMonitor onTierChange={setPerfTier} />
             <DPRController />
             <ambientLight intensity={0.1} />
             <Stars radius={100} depth={60} count={starCount} factor={3} saturation={0} fade speed={0.5} />
             <Sun />
+            {perfTier !== "low" && <NebulaCloud />}
             {planets.map((planet) => (
               <PlanetModel
                 key={planet.id}
@@ -220,15 +195,10 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet, highlightedPlanet
                 onClick={(ref) => handlePlanetClick(planet, ref)}
                 onRegisterRef={registerPlanetRef}
                 onHover={onPlanetHover}
+                speedMultiplier={speedMultiplier}
               />
             ))}
-            {/* Constellation connection lines */}
-            <ConstellationLines
-              planets={planets}
-              planetRefs={planetRefsMap.current}
-              highlightedPlanets={highlightedPlanets}
-            />
-            {/* Elliptical orbit rings */}
+            <ConstellationLines planets={planets} planetRefs={planetRefsMap.current} highlightedPlanets={highlightedPlanets} />
             {planets.map((planet) => {
               const ecc = planet.eccentricity || 0;
               const semiMinor = planet.orbitRadius * Math.sqrt(1 - ecc * ecc);
@@ -261,6 +231,14 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet, highlightedPlanet
             ← Galaxy View
           </button>
         )}
+        {/* Orbit Speed Control */}
+        <button
+          onClick={cycleSpeed}
+          className="absolute bottom-4 left-4 z-30 px-3 py-1.5 text-xs font-medium rounded-md glass text-muted-foreground hover:text-foreground transition-colors"
+          title={`Speed: ${speedMultiplier}x`}
+        >
+          ⏱ {speedMultiplier}x
+        </button>
         {/* Performance Tier Toggle */}
         <button
           onClick={cycleTier}

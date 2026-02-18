@@ -67,6 +67,9 @@ export interface Planet {
   emissiveColor?: string;
   eccentricity?: number;  // 0 = circle, 0.5 = ellipse
   axialTilt?: number;     // degrees
+  hasRings?: boolean;
+  ringColor?: string;
+  moons?: number;          // 0-3 orbiting moons
   // NLP Research specific
   researchAbstract?: string;
   researchMilestones?: ResearchMilestone[];
