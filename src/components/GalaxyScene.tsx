@@ -205,6 +205,7 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet, highlightedPlanet
               <PlanetModel
                 key={planet.id}
                 planetId={planet.id}
+                planet={planet}
                 color={planet.color}
                 size={planet.size}
                 orbitRadius={planet.orbitRadius}
@@ -238,7 +239,7 @@ const GalaxyScene = ({ planets, onPlanetClick, selectedPlanet, highlightedPlanet
                 </mesh>
               );
             })}
-            <CameraController targetRef={followRef} />
+            <CameraController targetRef={followRef} targetSize={selectedPlanet?.size} />
             <OrbitControls
               ref={controlsRef}
               enablePan={false}
