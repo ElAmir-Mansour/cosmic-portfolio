@@ -33,7 +33,7 @@ const ContactSection = ({ profile }: ContactSectionProps) => {
   };
 
   return (
-    <section id="contact" className="relative z-10 py-20 px-6">
+    <section id="contact" role="region" aria-label="Contact" className="relative z-10 py-20 px-6">
       <div className="container mx-auto max-w-lg">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -74,7 +74,9 @@ const ContactSection = ({ profile }: ContactSectionProps) => {
           className="glass rounded-xl p-6 space-y-4"
         >
           <div>
+            <label htmlFor="contact-name" className="sr-only">Your Name</label>
             <input
+              id="contact-name"
               {...register("name", { required: "Name is required" })}
               placeholder="Your Name"
               className="w-full px-4 py-2.5 rounded-lg bg-secondary/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
@@ -82,7 +84,9 @@ const ContactSection = ({ profile }: ContactSectionProps) => {
             {errors.name && <p className="text-xs text-destructive mt-1">{errors.name.message}</p>}
           </div>
           <div>
+            <label htmlFor="contact-email" className="sr-only">Your Email</label>
             <input
+              id="contact-email"
               {...register("email", {
                 required: "Email is required",
                 pattern: { value: /^\S+@\S+$/i, message: "Invalid email" },
@@ -93,7 +97,9 @@ const ContactSection = ({ profile }: ContactSectionProps) => {
             {errors.email && <p className="text-xs text-destructive mt-1">{errors.email.message}</p>}
           </div>
           <div>
+            <label htmlFor="contact-message" className="sr-only">Your Message</label>
             <textarea
+              id="contact-message"
               {...register("message", { required: "Message is required" })}
               placeholder="Your Message"
               rows={4}
