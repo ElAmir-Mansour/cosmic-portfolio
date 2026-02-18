@@ -1,9 +1,13 @@
 import { useRef, useMemo, useState, Suspense, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
-import { useGLTF, Float, Html } from "@react-three/drei";
+import { useGLTF, Float, Html, Trail } from "@react-three/drei";
 import * as THREE from "three";
 import { Smartphone, Code2, GraduationCap, Brain, Kanban, type LucideIcon } from "lucide-react";
 import HolographicHUD from "./HolographicHUD";
+import FresnelAtmosphere from "./FresnelAtmosphere";
+import PlanetRings from "./PlanetRings";
+import PlanetMoons from "./PlanetMoons";
+import ClickRipple from "./ClickRipple";
 import type { Planet } from "@/services/DataService";
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -31,6 +35,7 @@ interface PlanetModelProps {
   axialTilt?: number;
   onRegisterRef?: (planetId: string, ref: React.RefObject<THREE.Group>) => void;
   onHover?: (planetId: string | null) => void;
+  speedMultiplier?: number;
 }
 
 const GLTFModel = ({ path, size }: { path: string; size: number }) => {
@@ -63,42 +68,29 @@ const SphereFallback = ({ color, size, glowIntensity = 1.5, emissiveColor }: { c
   );
 };
 
-const Atmosphere = ({ color, size }: { color: string; size: number }) => {
-  const atmosphereColor = useMemo(() => new THREE.Color(color), [color]);
-  return (
-    <mesh scale={1.25}>
-      <sphereGeometry args={[size, 32, 32]} />
-      <meshBasicMaterial
-        color={atmosphereColor}
-        transparent
-        opacity={0.12}
-        side={THREE.BackSide}
-        depthWrite={false}
-      />
-    </mesh>
-  );
-};
-
 const PlanetModel = ({
   planetId, planet, color, size, orbitRadius, orbitSpeed, onClick, name, icon, modelPath,
   glowIntensity = 1.5, emissiveColor, eccentricity = 0, axialTilt = 0,
-  onRegisterRef, onHover,
+  onRegisterRef, onHover, speedMultiplier = 1,
 }: PlanetModelProps) => {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const meshRef = useRef<THREE.Mesh>(null!);
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
+  const [rippleTrigger, setRippleTrigger] = useState(0);
   const IconComponent = icon ? ICON_MAP[icon] : null;
 
   const tiltRad = useMemo(() => (axialTilt * Math.PI) / 180, [axialTilt]);
   const semiMinor = useMemo(() => orbitRadius * Math.sqrt(1 - eccentricity * eccentricity), [orbitRadius, eccentricity]);
 
-  // Register ref for constellation lines
+  const hasRings = planet.hasRings ?? false;
+  const moons = planet.moons ?? 0;
+
   useEffect(() => {
     onRegisterRef?.(planetId, groupRef as React.RefObject<THREE.Group>);
   }, [planetId, onRegisterRef]);
 
   useFrame(({ clock }) => {
-    const t = clock.getElapsedTime() * orbitSpeed;
+    const t = clock.getElapsedTime() * orbitSpeed * speedMultiplier;
     if (groupRef.current) {
       groupRef.current.position.x = Math.cos(t) * orbitRadius;
       groupRef.current.position.z = Math.sin(t) * semiMinor;
@@ -112,37 +104,51 @@ const PlanetModel = ({
 
   const handleClick = (e: any) => {
     e.stopPropagation();
+    setRippleTrigger((p) => p + 1);
     if (groupRef.current) onClick?.(groupRef as React.RefObject<THREE.Group>);
   };
 
   return (
     <group ref={groupRef}>
       <Float speed={1.2} rotationIntensity={0.1} floatIntensity={0.2} floatingRange={[-0.1, 0.1]}>
-        <mesh
-          ref={meshRef}
-          onClick={handleClick}
-          onPointerOver={(e) => {
-            e.stopPropagation();
-            document.body.style.cursor = "pointer";
-            setHovered(true);
-            onHover?.(planetId);
-          }}
-          onPointerOut={() => {
-            document.body.style.cursor = "auto";
-            setHovered(false);
-            onHover?.(null);
-          }}
+        <Trail
+          width={size * 2}
+          length={6}
+          color={new THREE.Color(color)}
+          attenuation={(t) => t * t}
+          target={meshRef}
         >
-          {modelPath ? (
-            <Suspense fallback={<SphereFallback color={color} size={size} glowIntensity={glowIntensity} emissiveColor={emissiveColor} />}>
-              <GLTFModel path={modelPath} size={size} />
-            </Suspense>
-          ) : (
-            <SphereFallback color={color} size={size} glowIntensity={glowIntensity} emissiveColor={emissiveColor} />
-          )}
-        </mesh>
-        <Atmosphere color={emissiveColor || color} size={size} />
+          <mesh
+            ref={meshRef}
+            onClick={handleClick}
+            onPointerOver={(e) => {
+              e.stopPropagation();
+              document.body.style.cursor = "pointer";
+              setHovered(true);
+              onHover?.(planetId);
+            }}
+            onPointerOut={() => {
+              document.body.style.cursor = "auto";
+              setHovered(false);
+              onHover?.(null);
+            }}
+          >
+            {modelPath ? (
+              <Suspense fallback={<SphereFallback color={color} size={size} glowIntensity={glowIntensity} emissiveColor={emissiveColor} />}>
+                <GLTFModel path={modelPath} size={size} />
+              </Suspense>
+            ) : (
+              <SphereFallback color={color} size={size} glowIntensity={glowIntensity} emissiveColor={emissiveColor} />
+            )}
+          </mesh>
+        </Trail>
+        <FresnelAtmosphere color={emissiveColor || color} size={size} />
+        {hasRings && <PlanetRings size={size} color={color} axialTilt={axialTilt} />}
       </Float>
+      {/* Moons */}
+      {moons > 0 && <PlanetMoons count={moons} planetSize={size} color={color} />}
+      {/* Click ripple */}
+      <ClickRipple color={color} size={size} trigger={rippleTrigger} />
       {/* Outer glow */}
       <mesh scale={1.4}>
         <sphereGeometry args={[size, 32, 32]} />

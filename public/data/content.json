@@ -30,6 +30,7 @@
       "size": 0.5,
       "eccentricity": 0.15,
       "axialTilt": 12,
+      "moons": 1,
       "description": "Native iOS applications built with Swift and SwiftUI. Clean architecture, smooth animations, and pixel-perfect interfaces.",
       "skills": ["Swift", "SwiftUI", "UIKit", "CoreData", "Combine"],
       "projects": [
@@ -87,6 +88,8 @@
       "size": 0.6,
       "eccentricity": 0.25,
       "axialTilt": 8,
+      "hasRings": true,
+      "moons": 2,
       "description": "End-to-end web applications. From databases to deployment, every layer built with purpose.",
       "skills": ["React", "TypeScript", "Go", "Python", "PostgreSQL", "Docker"],
       "projects": [
@@ -205,6 +208,8 @@
       "size": 0.55,
       "eccentricity": 0.3,
       "axialTilt": 20,
+      "hasRings": true,
+      "moons": 3,
       "description": "Natural Language Processing research focused on mental health applications. Using transformer models and linguistic analysis to detect early signs of depression from text data.",
       "skills": ["Python", "PyTorch", "Transformers", "spaCy", "NLTK"],
       "researchAbstract": "This research investigates the application of transformer-based language models for early detection of depressive symptoms in unstructured text. By fine-tuning BERT and RoBERTa on curated mental health corpora, the study evaluates how attention mechanisms can capture subtle linguistic markers of depression, including reduced lexical diversity, increased first-person pronoun usage, and persistent negative sentiment patterns.\n\nThe methodology combines domain-adaptive pre-training with multi-task learning to improve generalization across diverse text sources. Preliminary results show that attention-based models outperform traditional feature-engineering approaches by 12-18% in F1 score on held-out clinical validation sets.",
@@ -300,6 +305,7 @@
       "size": 0.4,
       "eccentricity": 0.05,
       "axialTilt": 3,
+      "moons": 1,
       "description": "Agile project management and team leadership. Shipping products on time without burning out the team.",
       "skills": ["Scrum", "Kanban", "Jira", "Confluence", "Stakeholder Management"],
       "projects": [
