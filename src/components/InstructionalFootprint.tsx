@@ -1,3 +1,4 @@
+import React from "react";
 import { motion } from "framer-motion";
 import { GraduationCap, Youtube, Globe, TrendingUp } from "lucide-react";
 import type { Planet, ImpactMetric, LearningPath } from "@/services/DataService";
@@ -13,7 +14,7 @@ interface InstructionalFootprintProps {
   planet: Planet;
 }
 
-const InstructionalFootprint = ({ planet }: InstructionalFootprintProps) => {
+const InstructionalFootprint = React.forwardRef<HTMLDivElement, InstructionalFootprintProps>(({ planet }, ref) => {
   const metrics = planet.impactMetrics;
   const paths = planet.learningPaths;
 
@@ -90,6 +91,7 @@ const InstructionalFootprint = ({ planet }: InstructionalFootprintProps) => {
       )}
     </div>
   );
-};
+});
+InstructionalFootprint.displayName = "InstructionalFootprint";
 
 export default InstructionalFootprint;
