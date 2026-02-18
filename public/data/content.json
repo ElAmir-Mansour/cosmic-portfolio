@@ -10,7 +10,13 @@
     "udemy": "https://www.udemy.com/user/elamir-mahmoud-mansour/",
     "youtube": "https://www.youtube.com/@ElAmir",
     "about": "A software engineer and NLP researcher with over a decade of experience building production systems across iOS, full-stack web, and machine learning. Shaped by years of military service that instilled discipline, leadership, and a mission-first mindset. Currently focused on applying transformer models to detect early signs of depression from language — research that sits at the intersection of AI and mental health.",
-    "resumeUrl": "#"
+    "resumeUrl": "#",
+    "stats": [
+      { "icon": "code", "value": 10, "suffix": "+", "label": "Years Engineering" },
+      { "icon": "shield", "value": 8, "suffix": "+", "label": "Years Military Service" },
+      { "icon": "brain", "value": 3, "suffix": "", "label": "Research Publications" },
+      { "icon": "graduation-cap", "value": 12, "suffix": "", "label": "Courses Published" }
+    ]
   },
   "planets": [
     {

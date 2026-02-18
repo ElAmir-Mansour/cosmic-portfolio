@@ -75,6 +75,13 @@ export interface Planet {
   learningPaths?: LearningPath[];
 }
 
+export interface ProfileStat {
+  icon: string;
+  value: number;
+  suffix: string;
+  label: string;
+}
+
 export interface Profile {
   name: string;
   title: string;
@@ -87,6 +94,7 @@ export interface Profile {
   youtube?: string;
   about?: string;
   resumeUrl?: string;
+  stats?: ProfileStat[];
 }
 
 export interface ContentData {

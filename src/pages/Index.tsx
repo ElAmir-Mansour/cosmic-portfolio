@@ -9,7 +9,7 @@ import AboutSection from "@/components/AboutSection";
 
 import SpatialAudio from "@/components/SpatialAudio";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { getAllContent, type Planet, type ContentData } from "@/services/DataService";
+import { getAllContent, clearCache, type Planet, type ContentData } from "@/services/DataService";
 import { Volume2, VolumeX, ArrowDown, FileText } from "lucide-react";
 
 const GalaxyScene = lazy(() => import("@/components/GalaxyScene"));
@@ -48,6 +48,7 @@ const Index = () => {
   const [content, setContent] = useState<ContentData | null>(null);
   const [selectedPlanet, setSelectedPlanet] = useState<Planet | null>(null);
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const [loadError, setLoadError] = useState<Error | null>(null);
   const isMobile = useIsMobile();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -62,7 +63,7 @@ const Index = () => {
   const galaxyOpacity = useTransform(scrollYProgress, [0.2, 0.4], [0, 1]);
 
   useEffect(() => {
-    getAllContent().then(setContent).catch(console.error);
+    getAllContent().then(setContent).catch(setLoadError);
   }, []);
 
   const tagline = content?.profile?.tagline || "";
@@ -84,6 +85,20 @@ const Index = () => {
   }, [selectedPlanet, content]);
 
 
+  if (loadError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background flex-col gap-4">
+        <p className="text-sm text-destructive">Failed to load portfolio data.</p>
+        <button
+          onClick={() => { setLoadError(null); clearCache(); getAllContent().then(setContent).catch(setLoadError); }}
+          className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm hover:bg-primary/90 transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   if (!content) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -94,6 +109,9 @@ const Index = () => {
 
   return (
     <div className="bg-background min-h-screen">
+      <a href="#explore" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[60] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg">
+        Skip to content
+      </a>
       <Starfield />
       <Navbar />
       <SpatialAudio enabled={audioEnabled} />
@@ -144,7 +162,7 @@ const Index = () => {
               >
                 <ArrowDown className="w-4 h-4" /> Explore My Work
               </a>
-              {content.profile.resumeUrl && (
+              {content.profile.resumeUrl && content.profile.resumeUrl !== "#" && (
                 <a
                   href={content.profile.resumeUrl}
                   target="_blank"
@@ -197,7 +215,7 @@ const Index = () => {
       )}
 
       {/* About Me */}
-      <AboutSection about={content.profile.about} />
+      <AboutSection about={content.profile.about} stats={content.profile.stats} />
 
       {/* Contact */}
       <ContactSection profile={content.profile} />
@@ -209,7 +227,7 @@ const Index = () => {
       <button
         onClick={() => setAudioEnabled((prev) => !prev)}
         className="fixed bottom-4 left-4 z-30 p-2 rounded-md glass text-muted-foreground hover:text-foreground transition-colors"
-        title={audioEnabled ? "Mute ambient audio" : "Enable ambient audio"}
+        aria-label={audioEnabled ? "Mute ambient audio" : "Enable ambient audio"}
       >
         {audioEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
       </button>

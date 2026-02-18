@@ -79,6 +79,7 @@ const Navbar = () => {
           href={s.href}
           target="_blank"
           rel="noopener noreferrer"
+          aria-label={s.href?.includes("linkedin") ? "LinkedIn" : s.href?.includes("github") ? "GitHub" : s.href?.includes("youtube") ? "YouTube" : s.href?.includes("medium") ? "Medium" : "Social link"}
           className="p-1.5 rounded-md text-muted-foreground transition-all duration-300 hover:text-primary hover:shadow-[0_0_12px_hsla(var(--primary)/0.4)]"
         >
           <s.icon className="w-4 h-4" />
