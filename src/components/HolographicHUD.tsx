@@ -16,7 +16,7 @@ const HolographicHUD = ({ planet, visible, size }: HolographicHUDProps) => {
     <Html
       position={[size + 1.2, 0.5, 0]}
       center
-      distanceFactor={10}
+      sprite
       style={{ pointerEvents: "none", userSelect: "none" }}
     >
       <AnimatePresence>
