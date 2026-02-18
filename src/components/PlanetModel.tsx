@@ -152,7 +152,7 @@ const PlanetModel = ({
       <Html
         position={[0, size + 0.6, 0]}
         center
-        distanceFactor={12}
+        sprite
         style={{ pointerEvents: "none", userSelect: "none" }}
       >
         <div className="flex flex-col items-center gap-1 whitespace-nowrap">
