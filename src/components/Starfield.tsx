@@ -44,14 +44,15 @@ const Starfield = () => {
       animationId = requestAnimationFrame(draw);
     };
 
+    const handleResize = () => { resize(); initStars(); };
     resize();
     initStars();
     draw();
-    window.addEventListener("resize", () => { resize(); initStars(); });
+    window.addEventListener("resize", handleResize);
 
     return () => {
       cancelAnimationFrame(animationId);
-      window.removeEventListener("resize", resize);
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
 

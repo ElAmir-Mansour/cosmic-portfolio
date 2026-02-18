@@ -53,9 +53,18 @@ class AmbientDrone {
   isRunning() { return this.running; }
 }
 
+// Shared AudioContext for UI sounds to avoid exhaustion
+let sharedUICtx: AudioContext | null = null;
+function getUIAudioContext(): AudioContext {
+  if (!sharedUICtx || sharedUICtx.state === "closed") {
+    sharedUICtx = new AudioContext();
+  }
+  return sharedUICtx;
+}
+
 // Short procedural click/hover sounds
 function playUISound(type: "hover" | "click") {
-  const ctx = new AudioContext();
+  const ctx = getUIAudioContext();
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
 
