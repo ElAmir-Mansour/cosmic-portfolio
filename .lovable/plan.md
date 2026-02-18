@@ -1,106 +1,100 @@
 
 
-# Expert Improvements Plan
+# Elite 3D Planet Enhancements
 
-## 1. Fix Dead Resume Link
-
-**Problem**: `resumeUrl` is `"#"` in content.json, which passes the truthy check and renders a broken "Download Resume" button.
-
-**Fix**: Update the conditional in `Index.tsx` to also check `resumeUrl !== "#"`, and update content.json to either remove `resumeUrl` or set it to an actual URL.
-
-**Files**: `src/pages/Index.tsx`, `public/data/content.json`
+## Overview
+Seven targeted upgrades that transform the galaxy from "good 3D portfolio" to "award-site level" -- all using libraries already installed (drei, three, framer-motion).
 
 ---
 
-## 2. Fix OG Image and Canonical URL for SEO
+## 1. Fresnel Atmosphere Glow (Custom Shader)
 
-**Problem**: `og:image` uses a relative path (`/og-image.png`) which social crawlers cannot resolve. The `canonical` URL points to the preview domain.
+**What**: Replace the current flat-opacity `Atmosphere` component with a Fresnel-based shader that creates a realistic rim-lighting glow around each planet -- bright at the edges, transparent in the center, like a real atmosphere.
 
-**Fix**:
-- Make `og:image` and `twitter:image` use a full absolute URL
-- Update canonical to the published domain (or remove it until published)
+**Why**: The current `meshBasicMaterial` with `opacity: 0.12` looks like a translucent shell. Fresnel makes planets look cinematic.
 
-**Files**: `index.html`
+**File**: `src/components/PlanetModel.tsx` -- replace the `Atmosphere` component with a `shaderMaterial` using a Fresnel formula in the fragment shader.
 
 ---
 
-## 3. Move Font Loading to HTML for Faster First Paint
+## 2. Planetary Rings (Saturn-style)
 
-**Problem**: Google Fonts loaded via `@import` in CSS blocks rendering until the stylesheet is fetched.
+**What**: Add configurable rings to planets via a new `hasRings` boolean in `content.json`. Rings will use a `ringGeometry` with a gradient texture generated on a canvas, tilted to match the planet's axial tilt, with transparency falloff.
 
-**Fix**:
-- Remove the `@import url(...)` from `src/index.css`
-- Add `<link rel="preconnect" href="https://fonts.googleapis.com">` and the stylesheet `<link>` in `index.html`
+**Why**: Rings instantly signal "solar system" and add visual variety between planets.
 
-**Files**: `index.html`, `src/index.css`
+**Files**: New `PlanetRings` component in `PlanetModel.tsx`, optional `hasRings`/`ringColor` fields in `DataService.ts` and `content.json`.
 
 ---
 
-## 4. Add Error Boundary and Retry for Data Loading
+## 3. Orbiting Moons (Instanced Mesh)
 
-**Problem**: If `content.json` fails to load (network error, corrupted localStorage), the app shows a spinner forever.
+**What**: Small spheres orbiting individual planets. Configurable via a `moons` count in `content.json` (e.g., 1-3 tiny glowing dots per planet). Uses a single `InstancedMesh` for all moons across all planets for performance.
 
-**Fix**:
-- Add error state to the `Index.tsx` loading flow with a "Retry" button
-- Wrap the app in a React error boundary that shows a themed fallback
+**Why**: Adds life and motion to each planet without heavy GPU cost.
 
-**Files**: `src/pages/Index.tsx`, `src/components/ErrorBoundary.tsx` (new)
+**Files**: New `Moons` sub-component in `PlanetModel.tsx`, optional `moons` field in `DataService.ts` and `content.json`.
 
 ---
 
-## 5. Make About Section Stats Data-Driven
+## 4. Orbit Particle Trail (drei Trail)
 
-**Problem**: The stats (10+ Years Engineering, 8+ Years Military, etc.) are hardcoded in `AboutSection.tsx`, breaking the content.json data-driven pattern.
+**What**: Each planet leaves a fading particle trail along its orbit path using drei's `<Trail>` component. The trail color matches the planet color with decay, creating a comet-like effect.
 
-**Fix**:
-- Add a `stats` array to the profile in `content.json`
-- Pass stats to `AboutSection` as a prop
-- Fall back to current hardcoded values if not present
+**Why**: Trails make orbits feel dynamic rather than static rings. drei's `Trail` is already available in the installed version.
 
-**Files**: `public/data/content.json`, `src/components/AboutSection.tsx`, `src/pages/Index.tsx`, `src/services/DataService.ts`
+**File**: Wrap each planet's mesh with `<Trail>` in `PlanetModel.tsx`.
 
 ---
 
-## 6. Accessibility Improvements
+## 5. Nebula / Cosmic Dust Background
 
-**Problem**: No keyboard navigation for the galaxy, missing form labels, no skip-nav link, no aria-labels on icon-only buttons.
+**What**: Add a few large, slowly-rotating, semi-transparent colored cloud meshes behind the planets using `sphereGeometry` with noise-based vertex displacement and additive blending. Creates a colored nebula effect in the deep background.
 
-**Fix**:
-- Add `aria-label` to the audio toggle button (currently only has `title`)
-- Add visually-hidden `<label>` elements to contact form inputs
-- Add a "Skip to content" link at the top of the page
-- Add `role="region"` and `aria-label` to major sections
+**Why**: The current background is just `Stars` dots on black. Nebula clouds add depth and atmosphere without affecting performance.
 
-**Files**: `src/pages/Index.tsx`, `src/components/ContactSection.tsx`, `src/components/Navbar.tsx`
+**File**: New `NebulaCloud` component added to `GalaxyScene.tsx`.
 
 ---
 
-## 7. Add Noscript Fallback
+## 6. Interactive Orbit Speed Control
 
-**Problem**: With JS disabled, users see a blank white page. Search engine crawlers that don't execute JS get nothing.
+**What**: A small slider or "time warp" button in the bottom-left corner of the galaxy view that lets users speed up or slow down all orbital speeds (0.25x to 4x). The multiplier is passed as a context value to all `PlanetModel` instances.
 
-**Fix**: Add a `<noscript>` tag inside `<body>` in `index.html` with the portfolio name, title, and a brief description.
+**Why**: Gives users a playful interaction and a sense of control over the simulation.
 
-**Files**: `index.html`
+**Files**: Speed state in `GalaxyScene.tsx`, consumed by `PlanetModel.tsx` via a context or prop.
+
+---
+
+## 7. Click Ripple / Shockwave Effect
+
+**What**: When a planet is clicked, a brief expanding ring (shockwave) radiates outward from the planet using a scaled `ringGeometry` with animated opacity. Pure Three.js, no post-processing.
+
+**Why**: Provides satisfying tactile feedback and makes clicks feel impactful.
+
+**File**: New `ClickRipple` component triggered from `PlanetModel.tsx` on click.
 
 ---
 
 ## Implementation Order
 
-1. Fix dead resume link (2 min)
-2. Fix OG/canonical URLs (3 min)
-3. Move font loading to HTML (5 min)
-4. Add noscript fallback (2 min)
-5. Error boundary and retry (10 min)
-6. Data-driven about stats (10 min)
-7. Accessibility improvements (15 min)
+1. Fresnel atmosphere shader (highest visual impact, replaces existing code)
+2. Planetary rings
+3. Orbiting moons
+4. Orbit particle trails
+5. Nebula background clouds
+6. Orbit speed control UI
+7. Click ripple effect
 
 ---
 
 ## Technical Notes
 
-- No new dependencies required
-- All changes are backward-compatible with existing localStorage data (new fields use optional typing)
-- The error boundary is a class component (React requirement) but wraps functional components seamlessly
-- Font preconnect will improve Lighthouse performance score by eliminating the render-blocking CSS import
+- No new dependencies needed -- everything uses `three`, `@react-three/drei`, and `@react-three/fiber` already installed
+- All new features respect the existing `PerfTier` system: moons/trails/nebula are disabled on "low" tier
+- New `content.json` fields (`hasRings`, `ringColor`, `moons`) are all optional with sensible defaults
+- The Fresnel shader is ~15 lines of GLSL, inlined as a string in the component
+- Trail from drei uses `meshLine` internally which is GPU-efficient
+- Instanced mesh for moons means all moon geometry is a single draw call
 
