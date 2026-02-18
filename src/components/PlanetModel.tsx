@@ -1,8 +1,10 @@
-import { useRef, useMemo, Suspense, useEffect } from "react";
+import { useRef, useMemo, useState, Suspense, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF, Float, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { Smartphone, Code2, GraduationCap, Brain, Kanban, type LucideIcon } from "lucide-react";
+import HolographicHUD from "./HolographicHUD";
+import type { Planet } from "@/services/DataService";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   "smartphone": Smartphone,
@@ -14,6 +16,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 
 interface PlanetModelProps {
   planetId: string;
+  planet: Planet;
   color: string;
   size: number;
   orbitRadius: number;
@@ -77,12 +80,13 @@ const Atmosphere = ({ color, size }: { color: string; size: number }) => {
 };
 
 const PlanetModel = ({
-  planetId, color, size, orbitRadius, orbitSpeed, onClick, name, icon, modelPath,
+  planetId, planet, color, size, orbitRadius, orbitSpeed, onClick, name, icon, modelPath,
   glowIntensity = 1.5, emissiveColor, eccentricity = 0, axialTilt = 0,
   onRegisterRef, onHover,
 }: PlanetModelProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const groupRef = useRef<THREE.Group>(null);
+  const [hovered, setHovered] = useState(false);
   const IconComponent = icon ? ICON_MAP[icon] : null;
 
   const tiltRad = useMemo(() => (axialTilt * Math.PI) / 180, [axialTilt]);
@@ -120,10 +124,12 @@ const PlanetModel = ({
           onPointerOver={(e) => {
             e.stopPropagation();
             document.body.style.cursor = "pointer";
+            setHovered(true);
             onHover?.(planetId);
           }}
           onPointerOut={() => {
             document.body.style.cursor = "auto";
+            setHovered(false);
             onHover?.(null);
           }}
         >
@@ -175,6 +181,8 @@ const PlanetModel = ({
           </span>
         </div>
       </Html>
+      {/* Holographic HUD on hover */}
+      <HolographicHUD planet={planet} visible={hovered} size={size} />
     </group>
   );
 };
