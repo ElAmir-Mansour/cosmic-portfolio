@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, lazy, Suspense, useMemo } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Starfield from "@/components/Starfield";
@@ -47,7 +47,6 @@ const Index = () => {
   const [content, setContent] = useState<ContentData | null>(null);
   const [selectedPlanet, setSelectedPlanet] = useState<Planet | null>(null);
   const [audioEnabled, setAudioEnabled] = useState(false);
-  const [hoveredPlanetId, setHoveredPlanetId] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -83,9 +82,6 @@ const Index = () => {
     return highlighted.size > 1 ? highlighted : undefined;
   }, [selectedPlanet, content]);
 
-  const handlePlanetHover = useCallback((planetId: string | null) => {
-    setHoveredPlanetId(planetId);
-  }, []);
 
   if (!content) {
     return (
@@ -147,14 +143,16 @@ const Index = () => {
               >
                 <ArrowDown className="w-4 h-4" /> Explore My Work
               </a>
-              <a
-                href={content.profile.resumeUrl || "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-6 py-3 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
-              >
-                <FileText className="w-4 h-4" /> Download Resume
-              </a>
+              {content.profile.resumeUrl && (
+                <a
+                  href={content.profile.resumeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-6 py-3 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+                >
+                  <FileText className="w-4 h-4" /> Download Resume
+                </a>
+              )}
             </motion.div>
 
             {!isMobile && (
@@ -183,7 +181,7 @@ const Index = () => {
                 onPlanetClick={setSelectedPlanet}
                 selectedPlanet={selectedPlanet}
                 highlightedPlanets={highlightedPlanets}
-                onPlanetHover={handlePlanetHover}
+                
               />
             </Suspense>
           </motion.div>
