@@ -6,7 +6,7 @@ import PlanetDrawer from "@/components/PlanetDrawer";
 import StarMap from "@/components/StarMap";
 import ContactSection from "@/components/ContactSection";
 import AboutSection from "@/components/AboutSection";
-import CosmicFooter from "@/components/CosmicFooter";
+
 import SpatialAudio from "@/components/SpatialAudio";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getAllContent, type Planet, type ContentData } from "@/services/DataService";
@@ -201,9 +201,6 @@ const Index = () => {
 
       {/* Contact */}
       <ContactSection profile={content.profile} />
-
-      {/* Footer */}
-      <CosmicFooter profile={content.profile} />
 
       {/* Planet Drawer */}
       <PlanetDrawer planet={selectedPlanet} onClose={() => setSelectedPlanet(null)} />
