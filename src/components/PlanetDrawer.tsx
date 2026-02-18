@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Play, Users, ExternalLink, BookOpen, Award } from "lucide-react";
 import type { Planet } from "@/services/DataService";
@@ -45,7 +45,7 @@ const VideoModal = ({ url, onClose }: { url: string; onClose: () => void }) => {
   );
 };
 
-const ELearningCard = ({ project }: { project: Planet["projects"][0] }) => {
+const ELearningCard = React.forwardRef<HTMLDivElement, { project: Planet["projects"][0] }>(({ project }, ref) => {
   const [showVideo, setShowVideo] = useState(false);
 
   return (
@@ -92,7 +92,8 @@ const ELearningCard = ({ project }: { project: Planet["projects"][0] }) => {
       </AnimatePresence>
     </>
   );
-};
+});
+ELearningCard.displayName = "ELearningCard";
 
 const DefaultProjectCard = ({ project }: { project: Planet["projects"][0] }) => (
   <div className="block p-4 rounded-lg bg-secondary/50 border border-border transition-colors hover:border-primary/30">
